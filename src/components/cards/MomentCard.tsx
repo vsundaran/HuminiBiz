@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
-import { EventChip } from '../chips/EventChip';
+import { EventChip, EventType } from '../chips/EventChip';
 import { ClockIcon } from '../icons/ClockIcon';
 import { CalendarIcon } from '../icons/CalendarIcon';
 import { HeartFillIcon } from '../icons/HeartFillIcon';
@@ -14,12 +14,13 @@ export type MomentCardProps = {
   userRole: string;
   profileImageUrl?: string;
   flagUrl?: string; // Optional right now
-  eventType: 'NewJoinee' | 'Promotion' | 'Birthday' | 'DeadlineStress';
+  eventType: EventType;
   eventMessage: string;
   dateStr?: string;
   timeStr?: string;
   buttonType: 'NotifyMe' | 'ShareWishes';
   likesCount: number;
+  isInCall?: boolean;
 };
 
 export const MomentCard: React.FC<MomentCardProps> = ({
@@ -32,6 +33,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
   timeStr,
   buttonType,
   likesCount,
+  isInCall,
 }) => {
   return (
     <View style={styles.cardContainer}>
@@ -77,16 +79,30 @@ export const MomentCard: React.FC<MomentCardProps> = ({
 
       {/* Footer / Actions section */}
       <View style={styles.footerRow}>
+        {isInCall && (
+          <View style={styles.inCallWrapper}>
+            <View style={styles.inCallDot} />
+            <Text style={styles.inCallText}>In call</Text>
+          </View>
+        )}
         <TouchableOpacity 
-          style={[styles.mainButton, buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton]}
+          style={[
+            styles.mainButton, 
+            buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
+            isInCall && styles.disabledButton
+          ]}
+          disabled={isInCall}
         >
-          <Text style={buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText}>
+          <Text style={[
+            buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,
+            isInCall && styles.disabledButtonText
+          ]}>
             {buttonType === 'NotifyMe' ? 'Notify me' : 'Share Your Wishes'}
           </Text>
           {buttonType === 'NotifyMe' ? (
             <BellIcon size={20} color={COLORS.primary} />
           ) : (
-            <VideoOutlineIcon size={20} color={COLORS.white} />
+            <VideoOutlineIcon size={20} color={isInCall ? '#9b9b9b' : COLORS.white} />
           )}
         </TouchableOpacity>
         
@@ -223,6 +239,38 @@ const styles = StyleSheet.create({
     ...FONTS.styles.subTitleSemibold14,
     color: COLORS.textBlueWhite,
     fontSize: 14,
+  },
+  inCallWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  inCallDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#d10000',
+    shadowColor: '#d10000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
+    elevation: 2,
+    marginRight: 4,
+  },
+  inCallText: {
+    fontFamily: 'DM Sans',
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#d10000',
+  },
+  disabledButton: {
+    backgroundColor: '#ddd',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  disabledButtonText: {
+    color: '#9b9b9b',
   },
   likeButtonContainer: {
     alignItems: 'center',

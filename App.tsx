@@ -14,6 +14,8 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 
+import { LiveMomentsScreen } from './src/screens/LiveMomentsScreen';
+
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
@@ -35,13 +37,14 @@ function App(): React.JSX.Element {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <NavigationContainer>
               <Stack.Navigator
-                initialRouteName="Home"
+                initialRouteName="Login"
                 screenOptions={{
                   headerShown: false,
                 }}>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Otp" component={OtpScreen} />
                 <Stack.Screen name="Home" component={HomeScreen} />
+                <Stack.Screen name="LiveMoments" component={LiveMomentsScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </GluestackUIProvider>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
 
-export type EventType = 'NewJoinee' | 'Promotion' | 'Birthday' | 'DeadlineStress';
+export type EventType = 'NewJoinee' | 'Promotion' | 'Birthday' | 'DeadlineStress' | 'WorkAnniversary';
 
 interface EventChipProps {
   type: EventType;
@@ -24,6 +24,9 @@ export const EventChip: React.FC<EventChipProps> = ({ type }) => {
       break;
     case 'Birthday':
       label = 'Wishes | Birthday';
+      break;
+    case 'WorkAnniversary':
+      label = 'Wishes | Work anniversery';
       break;
     case 'DeadlineStress':
       backgroundColor = COLORS.redBackground;

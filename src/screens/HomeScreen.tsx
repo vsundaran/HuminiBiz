@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { MomentCard } from '../components/cards/MomentCard';
@@ -15,6 +16,13 @@ type Tab = 'Home' | 'Your Moments' | 'Profile';
 
 export const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Home');
+  const navigation = useNavigation<any>();
+
+
+  const handleNavigateToLiveMoments = () => {
+    navigation.navigate('LiveMoments');
+  };
+
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -81,7 +89,10 @@ export const HomeScreen = () => {
               likesCount={0}
             />
 
-            <TouchableOpacity style={styles.viewAllButton}>
+            <TouchableOpacity 
+              style={styles.viewAllButton} 
+              onPress={() => navigation.navigate('LiveMoments')}
+            >
               <Text style={styles.viewAllText}>View All (122)</Text>
               <View style={[{transform: [{rotate: '90deg'}]}]}>
 
