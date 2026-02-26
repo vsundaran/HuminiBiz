@@ -63,13 +63,13 @@ const CategoryIcon = ({ type }: { type: CategoryType }) => {
   if (type === 'Wishes') {
     return (
       <View style={[styles.categoryIconBox, { backgroundColor: '#E3FFCF' }]}>
-        <Text style={styles.categoryEmoji}>🎁</Text>
+        {/* <Text style={styles.categoryEmoji}>🎁</Text> */}
       </View>
     );
   }
   return (
     <View style={[styles.categoryIconBox, { backgroundColor: '#FFE7E7' }]}>
-      <Text style={styles.categoryEmoji}>🔥</Text>
+      {/* <Text style={styles.categoryEmoji}>🔥</Text> */}
     </View>
   );
 };
@@ -102,7 +102,7 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
       <Switch
         value={enabled}
         onValueChange={() => onToggle(data.id)}
-        trackColor={{ false: '#EDEDED', true: '#EDEDED' }}
+        trackColor={{ false: '#EDEDED', true: '#7db80fff' }}
         thumbColor="#FFFFFF"
         ios_backgroundColor="#EDEDED"
         style={styles.toggle}
