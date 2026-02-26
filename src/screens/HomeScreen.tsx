@@ -11,6 +11,7 @@ import { BellIcon } from '../components/icons/BellIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
 import { ViewAllButton } from '../components/buttons/ViewAllButton';
 import { SubscribeCard } from '../components/cards/SubscribeCard';
+import { YourMomentsContent } from '../components/home/YourMomentsContent';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 
@@ -18,19 +19,10 @@ export const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Home');
   const navigation = useNavigation<any>();
 
-
-  const handleNavigateToLiveMoments = () => {
-    navigation.navigate('LiveMoments');
-  };
-
   const handleTabPress = (tab: Tab) => {
-    if (tab === 'Your Moments') {
-      navigation.navigate('YourMoments');
-    } else {
-      setActiveTab(tab);
-    }
+    // Switch content in-place — no navigation push
+    setActiveTab(tab);
   };
-
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -49,111 +41,122 @@ export const HomeScreen = () => {
           </Svg>
         </View>
 
-        {/* Header Section */}
-        <View style={styles.headerSection}>
-          <HuminiLogo width={55} height={55}/>
-          <TouchableOpacity style={styles.notificationBell}>
-            <BellIcon size={30} color={COLORS.primary} />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
-          {/* Subscribe Card */}
-          <SubscribeCard />
-
-          {/* Live moments section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Live moments</Text>
-            
-            <MomentCard
-              userName="Gnani Gnanasekaran"
-              userRole="Frappe Manager"
-              eventType="Birthday"
-              eventMessage="Today is my work anniversary! Feel free to call me and share your wishes or celebrate this moment together."
-              timeStr="Ends in 50m"
-              buttonType="ShareWishes"
-              likesCount={100}
-            />
-
-            <MomentCard
-              userName="Rajashekar Reddy"
-              userRole="Associate Developer"
-              eventType="Promotion"
-              eventMessage="I’ve been promoted today, feel free to call and celebrate this moment."
-              timeStr="Ends in 45m"
-              buttonType="ShareWishes"
-              likesCount={0}
-            />
-
-            <MomentCard
-              userName="Tamilselvan G"
-              userRole="UX/UI Designer"
-              eventType="Birthday"
-              eventMessage="It’s my birthday today, feel free to call me and share your wishes."
-              timeStr="Ends in 45m"
-              buttonType="ShareWishes"
-              likesCount={0}
-            />
-
-            <ViewAllButton
-              label="View All (122)"
-              onPress={() => navigation.navigate('LiveMoments')}
-            />
+        {/* Header Section — only shown on the Home tab */}
+        {activeTab === 'Home' && (
+          <View style={styles.headerSection}>
+            <HuminiLogo width={55} height={55} />
+            <TouchableOpacity style={styles.notificationBell}>
+              <BellIcon size={30} color={COLORS.primary} />
+              <View style={styles.notificationBadge} />
+            </TouchableOpacity>
           </View>
+        )}
 
-          {/* In Next 2h section */}
-          <View style={[styles.sectionContainer, styles.greyBackgroundContainer]}>
-            <Text style={styles.sectionTitle}>In Next 2h</Text>
-            
-            <MomentCard
-              userName="Krishanmoorthy"
-              userRole="Associate Developer"
-              eventType="Promotion"
-              eventMessage="I’ve been promoted today, feel free to call and celebrate this moment."
-              timeStr="11:00AM - 12:00PM"
-              buttonType="NotifyMe"
-              likesCount={0}
-            />
-          </View>
+        {/* ── Tab Content ── */}
+        {activeTab === 'Home' ? (
+          <>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}>
 
-          {/* Others section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Others</Text>
+              {/* Subscribe Card */}
+              <SubscribeCard />
 
-            <MomentCard
-              userName="Jeeva Santiago"
-              userRole="UX Designer"
-              eventType="NewJoinee"
-              eventMessage="I’ve just joined the team, feel free to call and say hello."
-              dateStr="12/3/26"
-              timeStr="11:00AM - 12:00PM"
-              buttonType="NotifyMe"
-              likesCount={0}
-            />
+              {/* Live moments section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Live moments</Text>
 
-            <MomentCard
-              userName="Surya M S"
-              userRole="Full-stack developer"
-              eventType="DeadlineStress"
-              eventMessage="I’ve just joined the team, feel free to call and say hello."
-              dateStr="12/3/26"
-              timeStr="11:00AM - 12:00PM"
-              buttonType="NotifyMe"
-              likesCount={0}
-            />
-          </View>
-          
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+                <MomentCard
+                  userName="Gnani Gnanasekaran"
+                  userRole="Frappe Manager"
+                  eventType="Birthday"
+                  eventMessage="Today is my work anniversary! Feel free to call me and share your wishes or celebrate this moment together."
+                  timeStr="Ends in 50m"
+                  buttonType="ShareWishes"
+                  likesCount={100}
+                />
 
-        {/* Floating Action Button */}
-        <TouchableOpacity style={styles.fab}>
-          <PlusIcon size={24} color={COLORS.primary} />
-        </TouchableOpacity>
+                <MomentCard
+                  userName="Rajashekar Reddy"
+                  userRole="Associate Developer"
+                  eventType="Promotion"
+                  eventMessage="I've been promoted today, feel free to call and celebrate this moment."
+                  timeStr="Ends in 45m"
+                  buttonType="ShareWishes"
+                  likesCount={0}
+                />
 
-        {/* Tab Bar at the bottom */}
+                <MomentCard
+                  userName="Tamilselvan G"
+                  userRole="UX/UI Designer"
+                  eventType="Birthday"
+                  eventMessage="It's my birthday today, feel free to call me and share your wishes."
+                  timeStr="Ends in 45m"
+                  buttonType="ShareWishes"
+                  likesCount={0}
+                />
+
+                <ViewAllButton
+                  label="View All (122)"
+                  onPress={() => navigation.navigate('LiveMoments')}
+                />
+              </View>
+
+              {/* In Next 2h section */}
+              <View style={[styles.sectionContainer, styles.greyBackgroundContainer]}>
+                <Text style={styles.sectionTitle}>In Next 2h</Text>
+
+                <MomentCard
+                  userName="Krishanmoorthy"
+                  userRole="Associate Developer"
+                  eventType="Promotion"
+                  eventMessage="I've been promoted today, feel free to call and celebrate this moment."
+                  timeStr="11:00AM - 12:00PM"
+                  buttonType="NotifyMe"
+                  likesCount={0}
+                />
+              </View>
+
+              {/* Others section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Others</Text>
+
+                <MomentCard
+                  userName="Jeeva Santiago"
+                  userRole="UX Designer"
+                  eventType="NewJoinee"
+                  eventMessage="I've just joined the team, feel free to call and say hello."
+                  dateStr="12/3/26"
+                  timeStr="11:00AM - 12:00PM"
+                  buttonType="NotifyMe"
+                  likesCount={0}
+                />
+
+                <MomentCard
+                  userName="Surya M S"
+                  userRole="Full-stack developer"
+                  eventType="DeadlineStress"
+                  eventMessage="I've just joined the team, feel free to call and say hello."
+                  dateStr="12/3/26"
+                  timeStr="11:00AM - 12:00PM"
+                  buttonType="NotifyMe"
+                  likesCount={0}
+                />
+              </View>
+
+              <View style={styles.bottomSpacer} />
+            </ScrollView>
+
+            {/* FAB for Home tab */}
+            <TouchableOpacity style={styles.fab}>
+              <PlusIcon size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+          </>
+        ) : activeTab === 'Your Moments' ? (
+          <YourMomentsContent />
+        ) : null /* Profile tab — future */}
+
+        {/* Shared Tab Bar — always at the bottom */}
         <TopTabBar activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
     </SafeAreaView>
@@ -163,7 +166,7 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fffbea', // Base color before gradient takes over
+    backgroundColor: '#fffbea',
   },
   container: {
     flex: 1,
@@ -181,15 +184,8 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: '#FFFFFF',
-    // borderWidth: 1.5,
-    // borderColor: '#EAEAEA',
     justifyContent: 'center',
     alignItems: 'center',
-    // // shadowColor: '#000',
-    // // shadowOffset: { width: 0, height: 4 },
-    // shadowOpacity: 0.05,
-    // shadowRadius: 10,
-    // elevation: 3,
   },
   notificationBadge: {
     position: 'absolute',
@@ -211,38 +207,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9F9',
     borderRadius: 24,
     padding: 16,
-    marginHorizontal: -16, 
+    marginHorizontal: -16,
   },
   sectionTitle: {
     ...FONTS.styles.headlineBold24,
     color: COLORS.textMainHeadline,
     fontSize: 18,
     marginBottom: 16,
-    letterSpacing: 0.5
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    backgroundColor: '#263238',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 100,
-    marginTop: 10,
-    gap: 10,
-  },
-  viewAllText: {
-    ...FONTS.styles.subTitleSemibold14,
-    color: COLORS.white,
-    fontSize: 13,
+    letterSpacing: 0.5,
   },
   bottomSpacer: {
-    height: 120, // space for tab bar
+    height: 120,
   },
   fab: {
     position: 'absolute',
-    bottom: 110, 
+    bottom: 110,
     right: 16,
     width: 60,
     height: 60,
