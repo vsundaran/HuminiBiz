@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { MomentCard } from '../components/cards/MomentCard';
@@ -8,15 +8,10 @@ import { COLORS, FONTS } from '../theme';
 import { HuminiLogo } from '../assets/icons/HuminiLogo';
 import { BellIcon } from '../components/icons/BellIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
-import { VideoOutlineIcon } from '../components/icons/VideoOutlineIcon';
 import { ArrowRightThinIcon } from '../components/icons/ArrowRightThinIcon';
-import { SubscribeBg1Icon } from '../components/icons/SubscribeBg1Icon';
-import { SubscribeBg2Icon } from '../components/icons/SubscribeBg2Icon';
-import { SubscribeBg3Icon } from '../components/icons/SubscribeBg3Icon';
+import { SubscribeCard } from '../components/cards/SubscribeCard';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
-
-const { width } = Dimensions.get('window');
 
 export const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Home');
@@ -40,9 +35,9 @@ export const HomeScreen = () => {
 
         {/* Header Section */}
         <View style={styles.headerSection}>
-          <HuminiLogo />
+          <HuminiLogo width={55} height={55}/>
           <TouchableOpacity style={styles.notificationBell}>
-            <BellIcon size={20} color={COLORS.primary} />
+            <BellIcon size={30} color={COLORS.primary} />
             <View style={styles.notificationBadge} />
           </TouchableOpacity>
         </View>
@@ -50,39 +45,7 @@ export const HomeScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           {/* Subscribe Card */}
-          <View style={styles.subscribeCard}>
-            {/* Background Gradient */}
-            <View style={[StyleSheet.absoluteFill, { borderRadius: 16, overflow: 'hidden' }]}>
-              <Svg height="100%" width="100%">
-                <Defs>
-                  <LinearGradient id="subBg" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <Stop offset="5%" stopColor="rgba(255, 237, 177, 0.9)" />
-                    <Stop offset="95%" stopColor="rgba(255, 236, 226, 1)" />
-                  </LinearGradient>
-                </Defs>
-                <Rect width="100%" height="100%" fill="url(#subBg)" />
-              </Svg>
-            </View>
-            
-            {/* Illustrations */}
-            <View style={styles.illustrationsLayer}>
-              <View style={styles.illust1}><SubscribeBg1Icon width={72} height={135} /></View>
-              <View style={styles.illust2}><SubscribeBg2Icon width={49} height={46} /></View>
-              <View style={styles.illust3}><SubscribeBg3Icon width={49} height={89} /></View>
-            </View>
-
-            <View style={styles.subscribeCardContent}>
-              <Text style={styles.subscribeTitle}>
-                <Text style={{ fontWeight: '700' }}>Subscribe</Text> to receive morning wishes
-              </Text>
-              <Text style={styles.subscribeSubtitle}>Start someone’s day with a simple good morning.</Text>
-              
-              <TouchableOpacity style={styles.morningButton}>
-                <Text style={styles.morningButtonText}>Say good morning (55)</Text>
-                <VideoOutlineIcon size={16} color={COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <SubscribeCard />
 
           {/* Live moments section */}
           <View style={styles.sectionContainer}>
@@ -120,7 +83,10 @@ export const HomeScreen = () => {
 
             <TouchableOpacity style={styles.viewAllButton}>
               <Text style={styles.viewAllText}>View All (122)</Text>
+              <View style={[{transform: [{rotate: '90deg'}]}]}>
+
               <ArrowRightThinIcon size={12} color="#ffffff" />
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -198,19 +164,19 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   notificationBell: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#EAEAEA',
+    // borderWidth: 1.5,
+    // borderColor: '#EAEAEA',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    // // shadowColor: '#000',
+    // // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.05,
+    // shadowRadius: 10,
+    // elevation: 3,
   },
   notificationBadge: {
     position: 'absolute',
@@ -224,64 +190,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
-  },
-  subscribeCard: {
-    height: 135,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    marginBottom: 32,
-    position: 'relative',
-    overflow: 'visible',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 0,
-  },
-  illustrationsLayer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
-    overflow: 'hidden',
-    zIndex: -1,
-  },
-  illust1: { position: 'absolute', right: -5, top: 0 },
-  illust2: { position: 'absolute', right: 30, top: 20 },
-  illust3: { position: 'absolute', right: 10, bottom: 0 },
-  subscribeCardContent: {
-    padding: 16,
-    flex: 1,
-    justifyContent: 'flex-start',
-  },
-  subscribeTitle: {
-    fontFamily: 'DM Sans',
-    fontSize: 12,
-    color: '#6e767a',
-    marginBottom: 4,
-  },
-  subscribeSubtitle: {
-    ...FONTS.styles.subTitleSemibold14,
-    fontSize: 14,
-    color: '#7d6500',
-    width: '60%', 
-    lineHeight: 18,
-  },
-  morningButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffe057',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 200,
-    marginTop: 20,
-    gap: 8,
-  },
-  morningButtonText: {
-    fontFamily: 'DM Sans',
-    fontWeight: '500',
-    fontSize: 12,
-    color: COLORS.primary,
   },
   sectionContainer: {
     marginBottom: 32,
