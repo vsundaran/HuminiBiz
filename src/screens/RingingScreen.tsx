@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
@@ -17,6 +17,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PhoneDeclineIcon } from '../assets/icons/PhoneDeclineIcon';
 import { VolumeHighGreyIcon } from '../assets/icons/VolumeHighGreyIcon';
 import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
+import { PhoneIcon } from '../assets/icons/PhoneIcon';
+import { ArrowLeftLineIcon } from '../assets/icons/ArrowLeftLineIcon';
 import { COLORS, FONTS, SIZES } from '../theme';
 
 type RootStackParamList = {
@@ -50,8 +52,13 @@ const Dot = ({ delay = 0 }: { delay: number }) => {
 
 export const RingingScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [isDeclined, setIsDeclined] = useState(false);
 
   const handleDecline = () => {
+    setIsDeclined(true);
+  };
+
+  const handleBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
@@ -94,13 +101,19 @@ export const RingingScreen = () => {
 
         {/* Ringing text and animating dots */}
         <View style={styles.ringingIndicator}>
-          <Text style={styles.ringingText}>Ringing</Text>
-          <View style={styles.dotsContainer}>
-            <Dot delay={0} />
-            <Dot delay={200} />
-            <Dot delay={400} />
-            <Dot delay={600} />
-          </View>
+          {isDeclined ? (
+            <Text style={styles.didNotPickText}>Did not pick</Text>
+          ) : (
+            <>
+              <Text style={styles.ringingText}>Ringing</Text>
+              <View style={styles.dotsContainer}>
+                <Dot delay={0} />
+                <Dot delay={200} />
+                <Dot delay={400} />
+                <Dot delay={600} />
+              </View>
+            </>
+          )}
         </View>
 
         {/* Context Card Card */}
@@ -114,34 +127,67 @@ export const RingingScreen = () => {
           </Text>
         </View>
 
-        {/* Bottom Section / Actions Pill */}
+        {/* Bottom Section / Actions */}
         <View style={styles.actionsPillContainer}>
-          <View style={styles.actionsPill}>
-            {/* Volume Button */}
-            <TouchableOpacity style={styles.greyButton} activeOpacity={0.7}>
-              <VolumeHighGreyIcon size={24} />
-            </TouchableOpacity>
-
-            {/* Decline Button */}
-            <TouchableOpacity 
-              style={styles.declineButton} 
-              activeOpacity={0.8}
-              onPress={handleDecline}
-            >
-              <View style={styles.declineIconWrapper}>
-                <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
-                  <Defs>
-                    <LinearGradient id="red-gradient" x1="0" y1="0" x2="0" y2="1">
-                      <Stop offset="0" stopColor="#FF5C5C" stopOpacity="1" />
-                      <Stop offset="1" stopColor="#FF0000" stopOpacity="1" />
-                    </LinearGradient>
-                  </Defs>
-                  <Rect x="0" y="0" width="100%" height="100%" fill="url(#red-gradient)" />
-                </Svg>
-                <PhoneDeclineIcon size={24} color={COLORS.white} />
+          {isDeclined ? (
+            <View style={styles.declinedActionsContainer}>
+              {/* Back Button */}
+              <View style={styles.declinedActionWrapper}>
+                <TouchableOpacity style={styles.backOuter} activeOpacity={0.7} onPress={handleBack}>
+                  <View style={styles.backInner}>
+                    <ArrowLeftLineIcon size={24} color="#515B60" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.declinedActionText}>Back</Text>
               </View>
-            </TouchableOpacity>
-          </View>
+
+              {/* Call Again Button */}
+              <View style={styles.declinedActionWrapper}>
+                <TouchableOpacity style={styles.callAgainOuter} activeOpacity={0.7}>
+                  <View style={styles.callAgainInner}>
+                    <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
+                      <Defs>
+                        <LinearGradient id="call-again-gradient" x1="0" y1="0" x2="1" y2="1">
+                          <Stop offset="0.14" stopColor="#A6FF6A" stopOpacity="1" />
+                          <Stop offset="0.87" stopColor="#CFFFAD" stopOpacity="1" />
+                        </LinearGradient>
+                      </Defs>
+                      <Rect x="0" y="0" width="100%" height="100%" fill="url(#call-again-gradient)" />
+                    </Svg>
+                    <PhoneIcon size={24} color="#486333" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={styles.declinedActionText}>Call Again</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.actionsPill}>
+              {/* Volume Button */}
+              <TouchableOpacity style={styles.greyButton} activeOpacity={0.7}>
+                <VolumeHighGreyIcon size={24} />
+              </TouchableOpacity>
+
+              {/* Decline Button */}
+              <TouchableOpacity 
+                style={styles.declineButton} 
+                activeOpacity={0.8}
+                onPress={handleDecline}
+              >
+                <View style={styles.declineIconWrapper}>
+                  <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
+                    <Defs>
+                      <LinearGradient id="red-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <Stop offset="0" stopColor="#FF5C5C" stopOpacity="1" />
+                        <Stop offset="1" stopColor="#FF0000" stopOpacity="1" />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect x="0" y="0" width="100%" height="100%" fill="url(#red-gradient)" />
+                  </Svg>
+                  <PhoneDeclineIcon size={24} color={COLORS.white} />
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </View>
@@ -214,6 +260,13 @@ const styles = StyleSheet.create({
     color: '#263238',
     opacity: 0.5,
     marginRight: 6,
+    letterSpacing: 0.1,
+  },
+  didNotPickText: {
+    fontFamily: FONTS.styles.headlineBold24.fontFamily,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#263238',
     letterSpacing: 0.1,
   },
   dotsContainer: {
@@ -302,6 +355,60 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  declinedActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 67,
+  },
+  declinedActionWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  backOuter: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 6,
+  },
+  backInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F1F1F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  callAgainOuter: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F3FFEA',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 6,
+  },
+  callAgainInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  declinedActionText: {
+    fontFamily: FONTS.styles.subTitleSemibold14.fontFamily,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#515B60',
   },
 });
 
