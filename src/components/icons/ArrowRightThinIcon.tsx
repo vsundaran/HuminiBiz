@@ -1,0 +1,14 @@
+import React from 'react';
+import Svg, { Path } from 'react-native-svg';
+
+export const ArrowRightThinIcon = ({ size = 16, color = '#515B60' }: { size?: number; color?: string }) => {
+  return (
+    <Svg width={size} height={(size * 20) / 11.08} viewBox="0 0 12 20" fill="none">
+      <Path
+        d="M0 6.66667C0.587417 6.66667 1.46458 6.05583 2.20083 5.4375C3.15083 4.6425 3.97971 3.6925 4.61225 2.60333C5.08646 1.78667 5.54167 0.796667 5.54167 0M5.54167 0C5.54167 0.796667 5.99687 1.7875 6.47108 2.60333C7.10442 3.6925 7.93329 4.6425 8.88171 5.4375C9.61875 6.05583 10.4975 6.66667 11.0833 6.66667M5.54167 0V20"
+        stroke={color}
+        strokeWidth={1.3}
+      />
+    </Svg>
+  );
+};
