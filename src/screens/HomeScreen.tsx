@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
     color: COLORS.textMainHeadline,
     fontSize: 18,
     marginBottom: 16,
+    letterSpacing: 0.5
   },
   viewAllButton: {
     flexDirection: 'row',

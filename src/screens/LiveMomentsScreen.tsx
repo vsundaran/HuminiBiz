@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
     ...FONTS.styles.headlineBold24,
     fontSize: 18,
     color: '#263238',
+    letterSpacing: 0.5
   },
   tabsWrapper: {
     maxHeight: 45,
