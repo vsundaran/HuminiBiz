@@ -50,7 +50,7 @@ export const ViewAllButton: React.FC<ViewAllButtonProps> = ({ label, onPress }) 
       activeOpacity={0.75}
     >
       {/* Gradient background via SVG */}
-      <Svg
+      {/* <Svg
         style={StyleSheet.absoluteFill}
         width="100%"
         height="100%"
@@ -71,7 +71,7 @@ export const ViewAllButton: React.FC<ViewAllButtonProps> = ({ label, onPress }) 
           ry={130}
           fill="url(#btnGrad)"
         />
-      </Svg>
+      </Svg> */}
 
       {/* Border overlay */}
       <View style={styles.border} pointerEvents="none" />
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
     // Min height to match Figma (text 20 line-height + 8*2 padding = 36)
     minHeight: 36,
     // Border trick: we'll use a View overlay for the border below
+    backgroundColor: '#F1FAFF',
   },
   border: {
     ...StyleSheet.absoluteFillObject,
@@ -119,5 +120,6 @@ const styles = StyleSheet.create({
     height: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    transform: [{ rotate: '90deg' }],
   },
 });

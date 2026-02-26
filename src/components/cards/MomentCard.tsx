@@ -8,6 +8,12 @@ import { HeartFillIcon } from '../icons/HeartFillIcon';
 import { HeartOutlineIcon } from '../icons/HeartOutlineIcon';
 import { VideoOutlineIcon } from '../icons/VideoOutlineIcon';
 import { BellIcon } from '../icons/BellIcon';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+export type RootStackParamList = {
+  Ringing: undefined;
+};
 
 export type MomentCardProps = {
   userName: string;
@@ -35,6 +41,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
   likesCount,
   isInCall,
 }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.cardContainer}>
       {/* Header section */}
@@ -92,6 +99,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
             isInCall && styles.disabledButton
           ]}
           disabled={isInCall}
+          onPress={() => {
+            navigation.navigate('Ringing');
+          }}
         >
           <Text style={[
             buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,

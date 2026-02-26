@@ -15,6 +15,7 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 
 import { LiveMomentsScreen } from './src/screens/LiveMomentsScreen';
+import { RingingScreen } from './src/screens/RingingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +46,7 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="Otp" component={OtpScreen} />
                 <Stack.Screen name="Home" component={HomeScreen} />
                 <Stack.Screen name="LiveMoments" component={LiveMomentsScreen} />
+                <Stack.Screen name="Ringing" component={RingingScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </GluestackUIProvider>
