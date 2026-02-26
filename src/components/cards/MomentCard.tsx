@@ -12,7 +12,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export type RootStackParamList = {
+  Home: undefined;
   Ringing: undefined;
+  VideoCall: undefined;
 };
 
 export type MomentCardProps = {

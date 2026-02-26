@@ -143,7 +143,7 @@ export const RingingScreen = () => {
 
               {/* Call Again Button */}
               <View style={styles.declinedActionWrapper}>
-                <TouchableOpacity style={styles.callAgainOuter} activeOpacity={0.7}>
+                <TouchableOpacity style={styles.callAgainOuter} activeOpacity={0.7} onPress={()=> navigation.navigate("VideoCall")}>
                   <View style={styles.callAgainInner}>
                     <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
                       <Defs>
