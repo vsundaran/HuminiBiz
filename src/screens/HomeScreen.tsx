@@ -23,6 +23,14 @@ export const HomeScreen = () => {
     navigation.navigate('LiveMoments');
   };
 
+  const handleTabPress = (tab: Tab) => {
+    if (tab === 'Your Moments') {
+      navigation.navigate('YourMoments');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -146,7 +154,7 @@ export const HomeScreen = () => {
         </TouchableOpacity>
 
         {/* Tab Bar at the bottom */}
-        <TopTabBar activeTab={activeTab} onTabPress={setActiveTab} />
+        <TopTabBar activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
     </SafeAreaView>
   );

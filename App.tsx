@@ -20,6 +20,7 @@ import { VideoCallScreen } from './src/screens/VideoCallScreen';
 import { CallCompletedScreen } from './src/screens/CallCompletedScreen';
 import { SelectReasonScreen } from './src/screens/SelectReasonScreen';
 import { ReportSubmittedScreen } from './src/screens/ReportSubmittedScreen';
+import { YourMomentsScreen } from './src/screens/YourMomentsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,7 +43,7 @@ function App(): React.JSX.Element {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <NavigationContainer>
               <Stack.Navigator
-                initialRouteName="ReportSubmitted"
+                initialRouteName="YourMoments"
                 screenOptions={{
                   headerShown: false,
                 }}>
@@ -55,6 +56,7 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="CallCompleted" component={CallCompletedScreen} />
                 <Stack.Screen name="SelectReason" component={SelectReasonScreen} />
                 <Stack.Screen name="ReportSubmitted" component={ReportSubmittedScreen} />
+                <Stack.Screen name="YourMoments" component={YourMomentsScreen} />
                 
               </Stack.Navigator>
             </NavigationContainer>
