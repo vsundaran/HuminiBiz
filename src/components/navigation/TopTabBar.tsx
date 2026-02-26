@@ -25,8 +25,8 @@ interface TopTabBarProps {
  */
 const TabGlowBg = () => (
   <Svg
-    width={78}
-    height={41}
+    width={88}
+    height={51}
     viewBox="0 0 78 71"
     fill="none"
     style={styles.glowBg}
@@ -39,7 +39,6 @@ const TabGlowBg = () => (
         width="78"
         height="71"
         filterUnits="userSpaceOnUse"
-        colorInterpolationFilters="sRGB"
       >
         <FeFlood floodOpacity="0" result="BackgroundImageFix" />
         <FeBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
@@ -176,7 +175,7 @@ const styles = StyleSheet.create({
   },
   glowBg: {
     position: 'absolute',
-    top: -16,
+    top: -5,
     alignSelf: 'center',
   },
   activeLine: {

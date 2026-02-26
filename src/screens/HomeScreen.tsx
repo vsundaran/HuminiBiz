@@ -9,7 +9,7 @@ import { COLORS, FONTS } from '../theme';
 import { HuminiLogo } from '../assets/icons/HuminiLogo';
 import { BellIcon } from '../components/icons/BellIcon';
 import { PlusIcon } from '../components/icons/PlusIcon';
-import { ArrowRightThinIcon } from '../components/icons/ArrowRightThinIcon';
+import { ViewAllButton } from '../components/buttons/ViewAllButton';
 import { SubscribeCard } from '../components/cards/SubscribeCard';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
@@ -89,16 +89,10 @@ export const HomeScreen = () => {
               likesCount={0}
             />
 
-            <TouchableOpacity 
-              style={styles.viewAllButton} 
+            <ViewAllButton
+              label="View All (122)"
               onPress={() => navigation.navigate('LiveMoments')}
-            >
-              <Text style={styles.viewAllText}>View All (122)</Text>
-              <View style={[{transform: [{rotate: '90deg'}]}]}>
-
-              <ArrowRightThinIcon size={12} color="#ffffff" />
-              </View>
-            </TouchableOpacity>
+            />
           </View>
 
           {/* In Next 2h section */}

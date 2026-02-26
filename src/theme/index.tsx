@@ -38,7 +38,7 @@ export const FONTS = {
     medium: '500',
     semiBold: '600',
     bold: '700',
-  },
+  } as const,
   sizes: {
     xs: 12,
     sm: 14,
