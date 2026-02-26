@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Defs, RadialGradient, LinearGradient, Stop, Circle, Rect } from 'react-native-svg';
 
 import { COLORS, FONTS } from '../../theme';
 import { PlusIcon } from '../icons/PlusIcon';
@@ -74,7 +74,7 @@ const CategoryIcon = ({ type }: { type: CategoryType }) => {
   );
 };
 
-// ─── Moment Card ──────────────────────────────────────────────────────────────
+// ─── Moment Card (Custom tab) ─────────────────────────────────────────────────
 
 type MomentCardProps = {
   data: MomentCardData;
@@ -144,6 +144,90 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
   </View>
 ));
 
+// ─── Subscribe Tab Content (Figma node 927-7862 / 1196-7098) ──────────────────
+
+/**
+ * The "Subscribe" inner tab — shows the "Morning Wishes" subscription card
+ * with warm amber-peach gradient, decorative blobs, time pill, and
+ * a prominent dark Subscribe button. Pixel-perfect from Figma.
+ */
+const SubscribeTabContent: React.FC = () => (
+  <View style={styles.subscribeWrapper}>
+    {/* ── Gradient card with decorative blobs ── */}
+    <View style={styles.subscribeCard}>
+      {/* Base linear gradient background: amber → peach */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <Svg width="100%" height="100%">
+          <Defs>
+            <LinearGradient id="cardBg" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0%" stopColor="rgba(255,237,177,0.9)" />
+              <Stop offset="100%" stopColor="rgb(255,236,226)" />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#cardBg)" />
+        </Svg>
+      </View>
+
+      {/* Decorative radial blob — top-left warm circle */}
+      <View style={styles.blobTopLeft} pointerEvents="none">
+        <Svg width={360} height={383} viewBox="0 0 360 383" fill="none">
+          <Defs>
+            <RadialGradient id="blobA" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+              <Stop offset="0%" stopColor="#FFE0A3" stopOpacity="0.9" />
+              <Stop offset="100%" stopColor="#FFD580" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Circle cx="130" cy="185" r="180" fill="url(#blobA)" opacity={0.6} />
+        </Svg>
+      </View>
+
+      {/* Decorative radial blob — bottom-right peach circle (flipped) */}
+      <View style={styles.blobBottomRight} pointerEvents="none">
+        <Svg width={360} height={383} viewBox="0 0 360 383" fill="none">
+          <Defs>
+            <RadialGradient id="blobB" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+              <Stop offset="0%" stopColor="#FFB8A0" stopOpacity="0.7" />
+              <Stop offset="100%" stopColor="#FFD9CC" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Circle cx="230" cy="200" r="170" fill="url(#blobB)" opacity={0.55} />
+        </Svg>
+      </View>
+
+      {/* ── Card Content ── */}
+
+      {/* EVERYDAY label */}
+      <Text style={styles.subEverydayLabel}>EVERYDAY</Text>
+
+      {/* Morning Wishes title */}
+      <Text style={styles.subTitle}>Morning Wishes</Text>
+
+      {/* Time pill */}
+      <View style={styles.subTimePill}>
+        <Text style={styles.subTimePillText}>8:00 AM – 10:00AM</Text>
+      </View>
+
+      {/* Description */}
+      <Text style={styles.subDescription}>
+        Get a positive wish each morning subscribe and begin your day brighter.
+      </Text>
+
+      {/* Bottom fade overlay — fades out the description bottom edge */}
+      <View style={styles.subFadeOverlay} pointerEvents="none" />
+
+      {/* Subscribe CTA button */}
+      <TouchableOpacity
+        style={styles.subButton}
+        activeOpacity={0.85}>
+        <Text style={styles.subButtonText}>Subscribe</Text>
+      </TouchableOpacity>
+
+      {/* Footer note */}
+      <Text style={styles.subFooterNote}>Modify or Unsubscribe anytime</Text>
+    </View>
+  </View>
+);
+
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 const INITIAL_MOMENTS: MomentCardData[] = [
@@ -176,7 +260,7 @@ const INITIAL_MOMENTS: MomentCardData[] = [
   },
 ];
 
-// ─── Main Content Component ───────────────────────────────────────────────────
+// ─── Main YourMomentsContent ─────────────────────────────────────────────────
 
 /**
  * The "Your Moments" tab content — inner tabs (Custom/Subscribe/Archive),
@@ -199,6 +283,12 @@ export const YourMomentsContent: React.FC = () => {
     setMoments(prev => prev.filter(m => m.id !== id));
   }, []);
 
+  // Active tab pill color: dark for Subscribe, blue for Custom/Archive (Figma spec)
+  const getActiveTabStyle = (tab: InnerTab) => {
+    if (tab !== activeInnerTab) return null;
+    return tab === 'Subscribe' ? styles.innerTabActiveSubscribe : styles.innerTabActive;
+  };
+
   return (
     <>
       {/* ── Inner top tabs: Custom / Subscribe / Archive ── */}
@@ -211,7 +301,7 @@ export const YourMomentsContent: React.FC = () => {
                 key={tab}
                 onPress={() => setActiveInnerTab(tab)}
                 activeOpacity={0.8}
-                style={[styles.innerTab, isActive && styles.innerTabActive]}>
+                style={[styles.innerTab, getActiveTabStyle(tab)]}>
                 <Text
                   style={[
                     styles.innerTabText,
@@ -225,33 +315,39 @@ export const YourMomentsContent: React.FC = () => {
         </View>
       </View>
 
-      {/* ── Moment Cards ── */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
-        {moments.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No moments yet</Text>
-          </View>
-        ) : (
-          moments.map(moment => (
-            <MomentCard
-              key={moment.id}
-              data={moment}
-              enabled={enabledMap[moment.id] ?? false}
-              onToggle={handleToggle}
-              onArchive={handleArchive}
-            />
-          ))
-        )}
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
-
-      {/* ── FAB ── */}
-      <TouchableOpacity style={styles.fab} activeOpacity={0.85}>
-        <PlusIcon size={24} color={COLORS.primary} />
-      </TouchableOpacity>
+      {/* ── Tab Content ── */}
+      {activeInnerTab === 'Subscribe' ? (
+        <SubscribeTabContent />
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          {activeInnerTab === 'Custom' ? (
+            moments.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>No moments yet</Text>
+              </View>
+            ) : (
+              moments.map(moment => (
+                <MomentCard
+                  key={moment.id}
+                  data={moment}
+                  enabled={enabledMap[moment.id] ?? false}
+                  onToggle={handleToggle}
+                  onArchive={handleArchive}
+                />
+              ))
+            )
+          ) : (
+            /* Archive tab — empty for now */
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No archived moments</Text>
+            </View>
+          )}
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      )}
     </>
   );
 };
@@ -282,8 +378,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // Blue active (Custom / Archive)
   innerTabActive: {
     backgroundColor: COLORS.surfaceBluePrimary,
+    shadowColor: 'rgba(72,86,92,0.29)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 11,
+    elevation: 4,
+  },
+  // Dark active (Subscribe — matches Figma exactly)
+  innerTabActiveSubscribe: {
+    backgroundColor: '#263238',
     shadowColor: 'rgba(72,86,92,0.29)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
@@ -326,6 +432,151 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.family,
     fontSize: FONTS.sizes.md,
     color: COLORS.textBodyText1,
+  },
+
+  /* ── Subscribe Tab ── */
+  subscribeWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  subscribeCard: {
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    overflow: 'hidden',
+    // Warm amber → peach gradient simulated via backgroundColor + relative children
+    backgroundColor: '#FFEDB1', // fallback base
+    // Gradient achieved via inner linear gradient overlay approach
+    height: 271,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Gradient background
+  subscribeCardGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    borderRadius: 24, // Match parent border radius
+  },
+  blobTopLeft: {
+    position: 'absolute',
+    left: -189,
+    top: -198,
+    width: 360,
+    height: 383,
+    opacity: 0.9,
+  },
+  blobBottomRight: {
+    position: 'absolute',
+    right: -142,
+    top: -198,
+    width: 360,
+    height: 383,
+    opacity: 0.9,
+    transform: [{ scaleY: -1 }],
+  },
+
+  // "EVERYDAY" golden label
+  subEverydayLabel: {
+    fontFamily: FONTS.family,
+    fontWeight: '700' as const,
+    fontSize: 11,
+    lineHeight: 18,
+    letterSpacing: 1.2,
+    color: 'rgba(125,101,0,0.8)',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  // "Morning Wishes" title
+  subTitle: {
+    fontFamily: FONTS.family,
+    fontWeight: '700' as const,
+    fontSize: 20,
+    lineHeight: 24,
+    color: 'rgba(125,101,0,0.9)',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  // Time pill
+  subTimePill: {
+    backgroundColor: 'rgba(255,252,239,0.6)',
+    borderRadius: 130,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    paddingHorizontal: 17,
+    paddingVertical: 4,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  subTimePillText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 12,
+    lineHeight: 19,
+    letterSpacing: 0.15,
+    color: COLORS.textSubHeadline,
+  },
+  // Description
+  subDescription: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.semiBold,
+    fontSize: 14,
+    lineHeight: 17,
+    letterSpacing: 0.15,
+    color: COLORS.textSubHeadline,
+    textAlign: 'center',
+    width: 225,
+    marginBottom: 20,
+  },
+  // Soft fade overlay at the bottom of the description area
+  subFadeOverlay: {
+    position: 'absolute',
+    bottom: 68,
+    left: -6,
+    right: -6,
+    height: 76,
+    // Gradient white fade from transparent → white (simulated via opacity-layered bg)
+    backgroundColor: 'rgba(255,255,255,0)',
+  },
+  // Subscribe CTA button
+  subButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#263238',
+    borderRadius: 10,
+    paddingHorizontal: 32,
+    paddingVertical: 10,
+    width: 258,
+    // Inner shadows not directly possible in RN; simulated with opacity on button background
+    shadowColor: 'rgba(72,86,92,0.29)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 11,
+    elevation: 4,
+  },
+  subButtonText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    letterSpacing: 0.1,
+    color: '#FDFEFF',
+  },
+  // "Modify or Unsubscribe anytime" note
+  subFooterNote: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 12,
+    lineHeight: 19,
+    letterSpacing: 0.15,
+    color: COLORS.textBodyText1,
+    textAlign: 'center',
+    marginTop: 10,
   },
 
   /* Moment Card */
@@ -390,8 +641,6 @@ const styles = StyleSheet.create({
   toggle: {
     transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
   },
-
-  /* Card body */
   cardDividerContainer: {
     paddingHorizontal: 16,
     paddingBottom: 0,
