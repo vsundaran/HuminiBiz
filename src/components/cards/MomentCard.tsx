@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Home: undefined;
   Ringing: undefined;
   VideoCall: undefined;
+  CallCompleted: undefined;
 };
 
 export type MomentCardProps = {

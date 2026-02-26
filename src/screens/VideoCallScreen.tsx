@@ -11,7 +11,7 @@ import { MicrophoneIcon } from '../assets/icons/MicrophoneIcon';
 import { VideoCameraIcon } from '../assets/icons/VideoCameraIcon';
 import { RotateCameraIcon } from '../assets/icons/RotateCameraIcon';
 // @ts-ignore Let's handle RootStackParamList locally here or by type
-import { RootStackParamList } from '../components/cards/MomentCard'; 
+import { RootStackParamList } from '../components/cards/MomentCard';
 
 import { COLORS, FONTS } from '../theme';
 
@@ -21,11 +21,7 @@ export const VideoCallScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleEndCall = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.replace('Home');
-    }
+    navigation.replace('CallCompleted');
   };
 
   return (

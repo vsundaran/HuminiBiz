@@ -17,6 +17,7 @@ import { OtpScreen } from './src/screens/OtpScreen';
 import { LiveMomentsScreen } from './src/screens/LiveMomentsScreen';
 import { RingingScreen } from './src/screens/RingingScreen';
 import { VideoCallScreen } from './src/screens/VideoCallScreen';
+import { CallCompletedScreen } from './src/screens/CallCompletedScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,7 +40,7 @@ function App(): React.JSX.Element {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <NavigationContainer>
               <Stack.Navigator
-                initialRouteName="Home"
+                initialRouteName="CallCompleted"
                 screenOptions={{
                   headerShown: false,
                 }}>
@@ -49,6 +50,7 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="LiveMoments" component={LiveMomentsScreen} />
                 <Stack.Screen name="Ringing" component={RingingScreen} />
                 <Stack.Screen name="VideoCall" component={VideoCallScreen} />
+                <Stack.Screen name="CallCompleted" component={CallCompletedScreen} />
                 
               </Stack.Navigator>
             </NavigationContainer>

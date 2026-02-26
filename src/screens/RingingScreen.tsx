@@ -24,6 +24,7 @@ import { COLORS, FONTS, SIZES } from '../theme';
 type RootStackParamList = {
   Home: undefined;
   Ringing: undefined;
+  VideoCall: undefined;
 };
 
 const Dot = ({ delay = 0 }: { delay: number }) => {
