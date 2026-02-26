@@ -19,6 +19,7 @@ type RootStackParamList = {
   Home: undefined;
   CallCompleted: undefined;
   VideoCall: undefined;
+  SelectReason: undefined;
 };
 
 export const CallCompletedScreen = () => {
@@ -30,11 +31,7 @@ export const CallCompletedScreen = () => {
   };
 
   const handleGoHome = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('Home');
-    }
+    navigation.navigate('SelectReason');
   };
 
   return (
