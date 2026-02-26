@@ -30,6 +30,7 @@ type RootStackParamList = {
   Home: undefined;
   CallCompleted: undefined;
   SelectReason: undefined;
+  ReportSubmitted: undefined;
 };
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
@@ -198,7 +199,7 @@ export const SelectReasonScreen = () => {
   const handleSubmit = () => {
     if (!canSubmit) return;
     // TODO: wire API call with selectedReasons + othersText
-    navigation.navigate('Home');
+    navigation.navigate('ReportSubmitted');
   };
 
   return (
