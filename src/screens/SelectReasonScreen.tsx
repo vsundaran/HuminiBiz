@@ -1,24 +1,30 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
   Defs,
   LinearGradient,
   Stop,
   Rect,
   Path,
-  Polygon,
 } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
+
+// ─── Navigation Types ─────────────────────────────────────────────────────────
 
 type RootStackParamList = {
   Home: undefined;
@@ -26,9 +32,8 @@ type RootStackParamList = {
   SelectReason: undefined;
 };
 
-// ─── Inline SVG Icons ────────────────────────────────────────────────────────
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
 
-/** fi:alert-triangle outline */
 const AlertTriangleIcon = () => (
   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
     <Path
@@ -55,7 +60,6 @@ const AlertTriangleIcon = () => (
   </Svg>
 );
 
-/** Back arrow (chevron left) */
 const BackArrowIcon = () => (
   <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
     <Path
@@ -68,28 +72,19 @@ const BackArrowIcon = () => (
   </Svg>
 );
 
-// ─── Reason Item ──────────────────────────────────────────────────────────────
-
-type ReasonItemProps = {
-  emoji: string;
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-};
-
-const ReasonItem = ({ emoji, label, selected, onPress }: ReasonItemProps) => (
-  <TouchableOpacity
-    style={[styles.reasonButton, selected && styles.reasonButtonSelected]}
-    activeOpacity={0.75}
-    onPress={onPress}>
-    <View style={styles.emojiWrapper}>
-      <Text style={styles.emojiText}>{emoji}</Text>
-    </View>
-    <Text style={styles.reasonLabel}>{label}</Text>
-  </TouchableOpacity>
+const CheckIcon = () => (
+  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M20 6L9 17l-5-5"
+      stroke="#263238"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Svg>
 );
 
-// ─── Reasons Data ─────────────────────────────────────────────────────────────
+// ─── Reason Data ──────────────────────────────────────────────────────────────
 
 const REASONS = [
   { id: 'inappropriate', emoji: '⚠️', label: 'Inappropriate Behavior' },
@@ -97,16 +92,102 @@ const REASONS = [
   { id: 'sexual', emoji: '🔞', label: 'Sexual Content' },
   { id: 'abusive', emoji: '🚫', label: 'Abusive Language' },
   { id: 'others', emoji: '💬', label: 'Others' },
-];
+] as const;
+
+type ReasonId = (typeof REASONS)[number]['id'];
+
+const MAX_CHARS = 60;
+
+// ─── ReasonRow Component ──────────────────────────────────────────────────────
+
+type ReasonRowProps = {
+  emoji: string;
+  label: string;
+  selected: boolean;
+  isOthers?: boolean;
+  onPress: () => void;
+};
+
+const ReasonRow = React.memo(
+  ({ emoji, label, selected, isOthers = false, onPress }: ReasonRowProps) => {
+    const isSelectedOthers = selected && isOthers;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.reasonRow,
+          selected && styles.reasonRowSelected,
+          isSelectedOthers && styles.reasonRowOthersSelected,
+        ]}
+        onPress={onPress}
+        activeOpacity={0.72}>
+        {/* Emoji icon */}
+        <View style={styles.emojiBox}>
+          <Text style={styles.emojiText}>{emoji}</Text>
+        </View>
+
+        {/* Label */}
+        <Text
+          style={[
+            styles.reasonLabel,
+            isSelectedOthers && styles.reasonLabelOthersSelected,
+          ]}>
+          {label}
+        </Text>
+
+        {/* Checkmark – only shown when selected */}
+        {selected && (
+          <View style={styles.checkIcon}>
+            <CheckIcon />
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  },
+);
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export const SelectReasonScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+
+  const [selectedReasons, setSelectedReasons] = useState<Set<ReasonId>>(
+    new Set(),
+  );
+  const [othersText, setOthersText] = useState('');
+  const inputRef = useRef<TextInput>(null);
+
+  const toggleReason = useCallback(
+    (id: ReasonId) => {
+      setSelectedReasons(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+          if (id === 'others') {
+            Keyboard.dismiss();
+          }
+        } else {
+          next.add(id);
+          // Auto-focus input when Others is selected
+          if (id === 'others') {
+            setTimeout(() => inputRef.current?.focus(), 200);
+          }
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
+  const othersSelected = selectedReasons.has('others');
+  const hasSelection = selectedReasons.size > 0;
+  // Submit is valid: at least one reason selected;
+  // if Others is selected, its text field may optionally be filled
+  const canSubmit = hasSelection;
 
   const handleCancel = () => {
+    Keyboard.dismiss();
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
@@ -115,14 +196,17 @@ export const SelectReasonScreen = () => {
   };
 
   const handleSubmit = () => {
-    if (!selectedReason) return;
-    // TODO: wire up submission logic (API call)
+    if (!canSubmit) return;
+    // TODO: wire API call with selectedReasons + othersText
     navigation.navigate('Home');
   };
 
   return (
-    <View style={styles.container}>
-      {/* Background gradient: #FFFBEA → #F4F4F4 (top ~30%) */}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
+      {/* Background gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
           <Defs>
@@ -136,49 +220,79 @@ export const SelectReasonScreen = () => {
         </Svg>
       </View>
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.flex}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={handleCancel}
             activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <BackArrowIcon />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Report</Text>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          {/* Safety message banner */}
-          <View style={styles.safetyBanner}>
-            <AlertTriangleIcon />
-            <View style={styles.safetyTextBlock}>
-              <Text style={styles.safetyTitle}>Your safety matters</Text>
-              <Text style={styles.safetyBody}>
-                Reports are reviewed by our team to ensure a respectful
-                workplace. Employees who violate community guidelines may face
-                action. Your identity will remain confidential.
-              </Text>
+        {/* Scrollable content */}
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
+            {/* Safety banner */}
+            <View style={styles.safetyBanner}>
+              <AlertTriangleIcon />
+              <View style={styles.safetyTextBlock}>
+                <Text style={styles.safetyTitle}>Your safety matters</Text>
+                <Text style={styles.safetyBody}>
+                  All reports are reviewed by our team. Users who violate our
+                  community guidelines may be permanently banned. Your identity
+                  will remain confidential.
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {/* Reason list */}
-          <View style={styles.reasonList}>
-            {REASONS.map(reason => (
-              <ReasonItem
-                key={reason.id}
-                emoji={reason.emoji}
-                label={reason.label}
-                selected={selectedReason === reason.id}
-                onPress={() => setSelectedReason(reason.id)}
-              />
-            ))}
-          </View>
-        </ScrollView>
+            {/* Reason rows */}
+            <View style={styles.reasonList}>
+              {REASONS.map(reason => (
+                <React.Fragment key={reason.id}>
+                  <ReasonRow
+                    emoji={reason.emoji}
+                    label={reason.label}
+                    selected={selectedReasons.has(reason.id)}
+                    isOthers={true}
+                    onPress={() => toggleReason(reason.id)}
+                  />
+
+                  {/* Inline text input shown only when Others is selected */}
+                  {reason.id === 'others' && othersSelected && (
+                    <View style={styles.othersInputWrapper}>
+                      <TextInput
+                        ref={inputRef}
+                        style={styles.othersInput}
+                        placeholder="Type here"
+                        placeholderTextColor={COLORS.textPlaceholder}
+                        value={othersText}
+                        onChangeText={t =>
+                          setOthersText(t.slice(0, MAX_CHARS))
+                        }
+                        maxLength={MAX_CHARS}
+                        multiline
+                        textAlignVertical="top"
+                        returnKeyType="done"
+                        blurOnSubmit
+                      />
+                      <Text style={styles.charCount}>
+                        {othersText.length}/{MAX_CHARS}
+                      </Text>
+                    </View>
+                  )}
+                </React.Fragment>
+              ))}
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
 
         {/* Bottom action row */}
         <View style={styles.bottomActionRow}>
@@ -192,36 +306,33 @@ export const SelectReasonScreen = () => {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              selectedReason ? styles.submitButtonActive : styles.submitButtonDisabled,
+              canSubmit ? styles.submitActive : styles.submitDisabled,
             ]}
             onPress={handleSubmit}
-            activeOpacity={selectedReason ? 0.85 : 1}
-            disabled={!selectedReason}>
+            activeOpacity={canSubmit ? 0.85 : 1}
+            disabled={!canSubmit}>
             <Text
               style={[
                 styles.submitText,
-                selectedReason ? styles.submitTextActive : styles.submitTextDisabled,
+                canSubmit ? styles.submitTextActive : styles.submitTextDisabled,
               ]}>
               Submit
             </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
+  flex: {
     flex: 1,
   },
 
-  /* ── Header ── */
+  /* Header */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -239,13 +350,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: FONTS.family,
     fontWeight: FONTS.weights.semiBold,
-    fontSize: FONTS.sizes.md, // 16
+    fontSize: FONTS.sizes.md,
     lineHeight: 24,
-    letterSpacing: 0,
     color: COLORS.textMainHeadline,
   },
 
-  /* ── Scroll area ── */
+  /* Scroll */
   scrollView: {
     flex: 1,
   },
@@ -256,7 +366,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
-  /* ── Safety Banner ── */
+  /* Safety banner */
   safetyBanner: {
     backgroundColor: '#FEF1E7',
     borderRadius: 8,
@@ -269,7 +379,7 @@ const styles = StyleSheet.create({
   safetyTitle: {
     fontFamily: FONTS.family,
     fontWeight: FONTS.weights.semiBold,
-    fontSize: FONTS.sizes.sm, // 14
+    fontSize: FONTS.sizes.sm,
     lineHeight: 20,
     letterSpacing: 0.1,
     color: COLORS.textMainHeadline,
@@ -282,11 +392,13 @@ const styles = StyleSheet.create({
     color: COLORS.textSubHeadline,
   },
 
-  /* ── Reason List ── */
+  /* Reason list */
   reasonList: {
     gap: 8,
   },
-  reasonButton: {
+
+  /* Reason row – default */
+  reasonRow: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 52,
@@ -295,11 +407,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFFFFF',
   },
-  reasonButtonSelected: {
+  /* Any selected row */
+  reasonRowSelected: {
     borderColor: COLORS.textMainHeadline,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
-  emojiWrapper: {
+  /* "Others" row when selected — blue tint from Figma */
+  reasonRowOthersSelected: {
+    backgroundColor: '#E6F6FF',
+    borderColor: '#E1EFF7',
+  },
+
+  emojiBox: {
     width: 44,
     height: 44,
     borderRadius: 4,
@@ -311,16 +430,62 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 32,
   },
+
   reasonLabel: {
+    flex: 1,
     fontFamily: FONTS.family,
     fontWeight: FONTS.weights.medium,
-    fontSize: FONTS.sizes.sm, // 14
+    fontSize: FONTS.sizes.sm,
     lineHeight: 20,
     color: COLORS.textSubHeadline,
     marginLeft: 8,
   },
+  reasonLabelOthersSelected: {
+    color: COLORS.textMainHeadline,
+  },
 
-  /* ── Bottom Actions ── */
+  checkIcon: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+  },
+
+  /* Others text input */
+  othersInputWrapper: {
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    height: 88,
+    paddingHorizontal: 15,
+    paddingTop: 12,
+    paddingBottom: 8,
+    justifyContent: 'space-between',
+  },
+  othersInput: {
+    flex: 1,
+    fontFamily: FONTS.family,
+    fontWeight: '400',
+    fontSize: 12,
+    lineHeight: 18,
+    color: COLORS.textMainHeadline,
+    padding: 0,
+    margin: 0,
+    textAlignVertical: 'top',
+  },
+  charCount: {
+    fontFamily: FONTS.family,
+    fontWeight: '400',
+    fontSize: 12,
+    lineHeight: 18,
+    color: COLORS.textPlaceholder,
+    textAlign: 'right',
+    alignSelf: 'flex-end',
+  },
+
+  /* Bottom action row */
   bottomActionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -335,12 +500,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    paddingHorizontal: 32,
   },
   cancelText: {
     fontFamily: FONTS.family,
     fontWeight: FONTS.weights.semiBold,
-    fontSize: FONTS.sizes.sm, // 14
+    fontSize: FONTS.sizes.sm,
     lineHeight: 20,
     letterSpacing: 0.1,
     color: '#2E566B',
@@ -353,11 +517,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 32,
   },
-  submitButtonDisabled: {
-    backgroundColor: COLORS.surfaceDisabledBackground,
-  },
-  submitButtonActive: {
+  submitActive: {
     backgroundColor: COLORS.surfaceBluePrimary,
+  },
+  submitDisabled: {
+    backgroundColor: COLORS.surfaceDisabledBackground,
   },
   submitText: {
     fontFamily: FONTS.family,
@@ -366,10 +530,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: 0.1,
   },
-  submitTextDisabled: {
-    color: COLORS.textDisabled,
-  },
   submitTextActive: {
     color: COLORS.white,
+  },
+  submitTextDisabled: {
+    color: COLORS.textDisabled,
   },
 });
