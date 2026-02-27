@@ -20,6 +20,7 @@ import { VideoCallScreen } from './src/screens/VideoCallScreen';
 import { CallCompletedScreen } from './src/screens/CallCompletedScreen';
 import { SelectReasonScreen } from './src/screens/SelectReasonScreen';
 import { ReportSubmittedScreen } from './src/screens/ReportSubmittedScreen';
+import { CreateMomentScreen } from './src/screens/CreateMomentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +56,8 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="CallCompleted" component={CallCompletedScreen} />
                 <Stack.Screen name="SelectReason" component={SelectReasonScreen} />
                 <Stack.Screen name="ReportSubmitted" component={ReportSubmittedScreen} />
-                
+                <Stack.Screen name="CreateMoment" component={CreateMomentScreen} />
+
               </Stack.Navigator>
             </NavigationContainer>
           </GluestackUIProvider>

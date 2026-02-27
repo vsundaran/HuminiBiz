@@ -149,7 +149,10 @@ export const HomeScreen = () => {
             </ScrollView>
 
             {/* FAB for Home tab */}
-            <TouchableOpacity style={styles.fab}>
+            <TouchableOpacity
+              style={styles.fab}
+              onPress={() => navigation.navigate('CreateMoment')}
+              activeOpacity={0.85}>
               <PlusIcon size={24} color={COLORS.primary} />
             </TouchableOpacity>
           </>
