@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { COLORS, FONTS } from '../../theme';
 import { VideoOutlineIcon } from '../icons/VideoOutlineIcon';
-
+import { SubscribeBg1Icon } from '../icons/SubscribeBg1Icon';
+import { SubscribeBg2Icon } from '../icons/SubscribeBg2Icon';
+import { SubscribeBg3Icon } from '../icons/SubscribeBg3Icon';
 interface SubscribeCardProps {
   onSubscribePress?: () => void;
   subscriberCount?: number;
@@ -26,14 +28,14 @@ export const SubscribeCard: React.FC<SubscribeCardProps> = ({
           </Defs>
           <Rect width="100%" height="100%" fill="url(#subBg)" />
         </Svg>
+        
+        {/* Illustrations placed inside the same container with overflow hidden */}
+        <View style={StyleSheet.absoluteFillObject}>
+          <View style={styles.illust3}><SubscribeBg3Icon width={49} height={88} /></View>
+          <View style={styles.illust2}><SubscribeBg2Icon width={48} height={67} /></View>
+          <View style={styles.illust1}><SubscribeBg1Icon width={60} height={77} /></View>
+        </View>
       </View>
-      
-      {/* Illustrations */}
-      {/* <View style={styles.illustrationsLayer}>
-        <View style={styles.illust1}><SubscribeBg1Icon width={72} height={135} /></View>
-        <View style={styles.illust2}><SubscribeBg2Icon width={49} height={46} /></View>
-        <View style={styles.illust3}><SubscribeBg3Icon width={49} height={89} /></View>
-      </View> */}
 
       <View style={styles.subscribeCardContent}>
         {/* <Text style={styles.subscribeTitle}>
@@ -68,15 +70,9 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 0,
   },
-  illustrationsLayer: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
-    overflow: 'hidden',
-    zIndex: -1,
-  },
-  illust1: { position: 'absolute', right: -5, top: 0 },
-  illust2: { position: 'absolute', right: 30, top: 20 },
-  illust3: { position: 'absolute', right: 10, bottom: 0 },
+  illust1: { position: 'absolute', right: -10, top: 50, transform: [{rotate: '22deg'}] },
+  illust2: { position: 'absolute', right: 80, bottom: 10, transform: [{rotate: '-23.5deg'}] },
+  illust3: { position: 'absolute', right: 40, top: 5 },
   subscribeCardContent: {
     padding: 16,
     flex: 1,
