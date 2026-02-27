@@ -57,19 +57,22 @@ const CalendarIcon = () => (
   </Svg>
 );
 
+import { WishesIcon } from '../icons/WishesIcon';
+import { MotivationIcon } from '../icons/MotivationIcon';
+
 // ─── Category Icon ────────────────────────────────────────────────────────────
 
 const CategoryIcon = ({ type }: { type: CategoryType }) => {
   if (type === 'Wishes') {
     return (
       <View style={[styles.categoryIconBox, { backgroundColor: '#E3FFCF' }]}>
-        {/* <Text style={styles.categoryEmoji}>🎁</Text> */}
+        <WishesIcon size={40} color="#486333" />
       </View>
     );
   }
   return (
     <View style={[styles.categoryIconBox, { backgroundColor: '#FFE7E7' }]}>
-      {/* <Text style={styles.categoryEmoji}>🔥</Text> */}
+      <MotivationIcon size={40} color="#795151" />
     </View>
   );
 };

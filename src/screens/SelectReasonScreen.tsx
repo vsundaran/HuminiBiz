@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  TouchableWithoutFeedback,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
@@ -205,8 +204,7 @@ export const SelectReasonScreen = () => {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {/* Background gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -235,12 +233,13 @@ export const SelectReasonScreen = () => {
         </View>
 
         {/* Scrollable content */}
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={true}
+          showsVerticalScrollIndicator={false}>
             {/* Safety banner */}
             <View style={styles.safetyBanner}>
               <AlertTriangleIcon />
@@ -293,7 +292,6 @@ export const SelectReasonScreen = () => {
               ))}
             </View>
           </ScrollView>
-        </TouchableWithoutFeedback>
 
         {/* Bottom action row */}
         <View style={styles.bottomActionRow}>

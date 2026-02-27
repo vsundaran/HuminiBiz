@@ -102,7 +102,9 @@ export const ProfileContent: React.FC = () => {
       {/* ── User Info Card ─────────────────────────────────────────────── */}
       <View style={styles.card}>
         <View style={styles.userInfoTop}>
-          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+          <Image 
+          source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80' }} 
+          style={styles.avatar} />
           <View style={styles.userTextBlock}>
             <Text style={styles.userName}>Tamilselvan</Text>
             <Text style={styles.userRole}>UX Designer</Text>

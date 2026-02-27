@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    gap: 8,
+    gap: 7,
   },
   iconBtnWhite: {
     width: 48,
