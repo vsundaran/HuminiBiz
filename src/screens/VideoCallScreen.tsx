@@ -27,11 +27,11 @@ export const VideoCallScreen = () => {
   return (
     <View style={styles.container}>
       {/* Full Screen Background Video/Image */}
-      <Image
+      {/* <Image
         source={{ uri: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=1000' }}
         style={StyleSheet.absoluteFillObject}
         resizeMode="cover"
-      />
+      /> */}
 
       {/* Top Gradient for Text Readability */}
       <View style={styles.topGradient}>
@@ -70,10 +70,10 @@ export const VideoCallScreen = () => {
 
         {/* Small floating video view (Local user) */}
         <View style={styles.localVideoContainer}>
-          <Image
+          {/* <Image
             source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
             style={styles.localVideo}
-          />
+          /> */}
         </View>
 
         <View style={styles.bottomSection}>
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   localVideoContainer: {
     position: 'absolute',
-    top: 80,
+    top: 190,
     right: 20,
     width: 120,
     height: 160,
