@@ -50,7 +50,8 @@ export const MomentCard: React.FC<MomentCardProps> = ({
       {/* Header section */}
       <View style={styles.headerRow}>
         <Image 
-          source={{ uri: profileImageUrl || `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=EAEAEA&color=263238` }} 
+          // source={{ uri: profileImageUrl || `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=EAEAEA&color=263238` }} 
+          source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
           style={styles.avatar} 
         />
         <View style={styles.headerTextContainer}>

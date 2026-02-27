@@ -2,6 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { VideoOutlineIcon } from '../icons/VideoOutlineIcon';
+import { LiveMomentsFace1Icon } from '../../assets/icons/LiveMomentsFace1Icon';
+import { LiveMomentsFace2Icon } from '../../assets/icons/LiveMomentsFace2Icon';
+import { LiveMomentsFace3Icon } from '../../assets/icons/LiveMomentsFace3Icon';
+import { LiveMomentsFace5Icon } from '../../assets/icons/LiveMomentsFace5Icon';
+import { LiveMomentsFace6Icon } from '../../assets/icons/LiveMomentsFace6Icon';
+import { LiveMomentsFace7Icon } from '../../assets/icons/LiveMomentsFace7Icon';
+import { LiveMomentsGlowIcon } from '../../assets/icons/LiveMomentsGlowIcon';
 
 export const LiveMomentsBanner: React.FC = () => {
   return (
@@ -19,7 +26,36 @@ export const LiveMomentsBanner: React.FC = () => {
         </Svg>
       </View>
       
-      {/* Abstract SVGs from Figma would go here if needed... but text looks good without it */}
+      {/* Abstract Background SVGs */}
+      <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
+        <View style={{ position: 'absolute', top: -54.5, left: '50%', marginLeft: -61, width: 122, height: 122 }}>
+          <LiveMomentsGlowIcon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 13.8, left: 15.5, width: 68, height: 82.5 }}>
+          <LiveMomentsFace7Icon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 16.5, left: 248.5, width: 53.8, height: 97.5 }}>
+          <LiveMomentsFace6Icon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 78.5, left: 50, width: 54.7, height: 78.3, transform: [{ rotate: '17.18deg' }] }}>
+          <LiveMomentsFace2Icon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 73, left: 198, width: 52.7, height: 74, transform: [{ rotate: '-23.5deg' }] }}>
+          <LiveMomentsFace3Icon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 72, left: -20, width: 68, height: 90.8, transform: [{ rotate: '-6.81deg' }] }}>
+          <LiveMomentsFace5Icon width="100%" height="100%" />
+        </View>
+
+        <View style={{ position: 'absolute', top: 64, left: 272.4, width: 93.5, height: 103.6, transform: [{ rotate: '21.97deg' }] }}>
+          <LiveMomentsFace1Icon width="100%" height="100%" />
+        </View>
+      </View>
       
       <Text style={styles.countText}>122</Text>
       <Text style={styles.subtitleText}>Live moments</Text>
