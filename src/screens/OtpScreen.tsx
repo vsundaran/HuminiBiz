@@ -153,13 +153,13 @@ export const OtpScreen = () => {
 
           {/* Submit Button */}
           <AnimatedView animation="slideUp" delay={200} style={styles.buttonPosition}>
-            <Shadow
+            {/* <Shadow
               distance={isOtpComplete ? 5 : 0}
               startColor="rgba(72,86,92,0.29)"
               offset={[0, 4]}
               style={{ width: '100%', borderRadius: 10 }}
               containerStyle={{ width: '100%' }}
-            >
+            > */}
               <AnimatedPressable 
                   style={[styles.button, !isOtpComplete && styles.buttonDisabled]} 
                   onPress={handleLogin}
@@ -172,7 +172,7 @@ export const OtpScreen = () => {
                       <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
                   </View>
               </AnimatedPressable>
-            </Shadow>
+            {/* </Shadow> */}
           </AnimatedView>
         </View>
       </SafeAreaView>

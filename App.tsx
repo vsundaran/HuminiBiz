@@ -49,7 +49,7 @@ function App(): React.JSX.Element {
               },
             }}>
               <Stack.Navigator
-                initialRouteName="Home"
+                initialRouteName="Login"
                 screenOptions={{
                   ...globalScreenOptions,
                 }}>

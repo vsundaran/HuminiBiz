@@ -43,17 +43,27 @@ const TabGlowBg = () => (
   >
     <Defs>
       <Filter
-        id="filter0_f_glow"
-        x="0"
-        y="-14"
-        width="78"
-        height="71"
-        filterUnits="userSpaceOnUse"
-      >
-        <FeFlood floodOpacity={0} result="BackgroundImageFix" />
-        <FeBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-        <FeGaussianBlur stdDeviation={7.5} result="effect1_foregroundBlur_glow" />
-      </Filter>
+  id="filter0_f_glow"
+  x="-80"
+  y="-80"
+  width="240"
+  height="220"
+  filterUnits="userSpaceOnUse"
+>
+  <FeFlood floodOpacity={0} result="BackgroundImageFix" />
+  <FeBlend
+    mode="normal"
+    in="SourceGraphic"
+    in2="BackgroundImageFix"
+    result="shape"
+  />
+
+  {/* VERY HIGH BLUR */}
+  <FeGaussianBlur
+    stdDeviation={35}
+    result="effect1_foregroundBlur_glow"
+  />
+</Filter>
       <LinearGradient
         id="paint0_linear_glow"
         x1="39"
