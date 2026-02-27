@@ -260,6 +260,25 @@ const INITIAL_MOMENTS: MomentCardData[] = [
   },
 ];
 
+
+
+const ARCHIVED_MOMENTS: MomentCardData[] = [
+  {
+    id: 'a1',
+    category: 'Motivation',
+    categoryLabel: 'Motivation',
+    subLabel: 'Deadline Stress',
+    status: 'Scheduled',
+    message:
+      "I'm facing a tough deadline today, feel free to call and motivate me.",
+    dateStr: '12/3/26',
+    timeRange: '11:00AM-12:00PM',
+    headerBg: '#FFF3EF',
+    titleColor: '#804343',
+    subColor: 'rgba(128,67,67,0.9)',
+  },
+];
+
 // ─── Main YourMomentsContent ─────────────────────────────────────────────────
 
 /**
@@ -341,9 +360,15 @@ export const YourMomentsContent: React.FC = () => {
             )
           ) : (
             /* Archive tab — empty for now */
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No archived moments</Text>
-            </View>
+           ARCHIVED_MOMENTS.length === 0 ? (
+                        <View style={styles.emptyState}>
+                          <Text style={styles.emptyText}>No archived moments</Text>
+                        </View>
+                      ) : (
+                        ARCHIVED_MOMENTS.map(moment => (
+                          <ArchiveMomentCard key={moment.id} data={moment} />
+                        ))
+                      )
           )}
           <View style={styles.bottomSpacer} />
         </ScrollView>
@@ -351,6 +376,56 @@ export const YourMomentsContent: React.FC = () => {
     </>
   );
 };
+
+
+
+const ArchiveMomentCard = React.memo(({ data }: { data: MomentCardData }) => (
+  <View style={styles.card}>
+    {/* Header strip */}
+    <View style={[styles.cardHeader, { backgroundColor: data.headerBg }]}>
+      <View style={styles.cardHeaderLeft}>
+        <CategoryIcon type={data.category} />
+        <View style={styles.cardHeaderText}>
+          <Text style={[styles.cardTitle, { color: data.titleColor }]}>
+            {data.categoryLabel}
+          </Text>
+          <Text style={[styles.cardSubLabel, { color: data.subColor }]}>
+            {data.subLabel}
+          </Text>
+        </View>
+      </View>
+    </View>
+
+    {/* Body */}
+    <View style={styles.cardDividerContainer}>
+      <View style={styles.cardBody}>
+        <Text style={styles.cardMessage}>{data.message}</Text>
+        <View style={styles.divider} />
+        {/* Footer row — date/time only, no archive button */}
+        <View style={styles.cardFooter}>
+          <View style={styles.timeRow}>
+            {data.timeStr && (
+              <>
+                <ClockIcon />
+                <Text style={styles.timeText}>{data.timeStr}</Text>
+              </>
+            )}
+            {data.dateStr && (
+              <>
+                <CalendarIcon />
+                <Text style={styles.timeText}>{data.dateStr}</Text>
+                {data.timeRange && (
+                  <Text style={styles.timeText}>{data.timeRange}</Text>
+                )}
+              </>
+            )}
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+));
+
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
