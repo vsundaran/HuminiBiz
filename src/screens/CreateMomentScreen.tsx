@@ -329,7 +329,11 @@ export const CreateMomentScreen: React.FC = () => {
 
         {/* ── Create Moment Button ── */}
         <View style={styles.bottomBar}>
-          <TouchableOpacity style={styles.createButton} activeOpacity={0.85}>
+          <TouchableOpacity 
+            style={styles.createButton} 
+            activeOpacity={0.85}
+            onPress={() => navigation.goBack()}
+          >
             <Text style={styles.createButtonText}>Create Moment</Text>
           </TouchableOpacity>
         </View>
