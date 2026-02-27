@@ -96,9 +96,11 @@ export const OtpScreen = () => {
         <AnimatedView animation="slideDown" style={styles.header}>
             <AnimatedPressable onPress={handleBack} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                
-            style={{ transform: [{ rotate: '90deg' }] }}
+            
             >
+              <View style={{ transform: [{ rotate: '90deg' }] }}>
                 <ArrowLeftIcon size={24} color="#263238" />
+              </View>
             </AnimatedPressable>
             <RNText style={styles.headerTitle}>Enter OTP</RNText>
         </AnimatedView>

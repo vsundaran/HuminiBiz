@@ -37,7 +37,7 @@ export const LiveMomentsScreen = () => {
         {/* Top Navigation */}
         <AnimatedView animation="slideDown" style={styles.topNav}>
           <AnimatedPressable onPress={() => navigation.goBack()} style={styles.backButton}>
-            <View style={[{ transform: [{ rotate: '180deg' }] }]}>
+            <View style={[{ transform: [{ rotate: '270deg' }] }]}>
               <ArrowRightThinIcon size={14} color="#000" />
             </View>
           </AnimatedPressable>

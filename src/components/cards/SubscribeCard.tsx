@@ -77,12 +77,13 @@ const styles = StyleSheet.create({
     padding: 16,
     flex: 1,
     justifyContent: 'flex-start',
+    paddingBottom: 26,
   },
   subscribeTitle: {
     fontFamily: FONTS.family,
     fontSize: FONTS.sizes.xs,
     color: COLORS.textBodyText1,
-    marginTop: 11,
+    marginTop: 5,
   },
   subscribeSubtitle: {
     ...FONTS.styles.subTitleSemibold14,
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 200,
-    marginTop: 20,
+    marginTop: 14,
     gap: 8,
   },
   morningButtonText: {

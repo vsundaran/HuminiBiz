@@ -43,7 +43,7 @@ function App(): React.JSX.Element {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <NavigationContainer>
               <Stack.Navigator
-                initialRouteName="Login"
+                initialRouteName="Home"
                 screenOptions={{
                   ...globalScreenOptions,
                 }}>
