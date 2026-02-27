@@ -12,6 +12,7 @@ import { PlusIcon } from '../components/icons/PlusIcon';
 import { ViewAllButton } from '../components/buttons/ViewAllButton';
 import { SubscribeCard } from '../components/cards/SubscribeCard';
 import { YourMomentsContent } from '../components/home/YourMomentsContent';
+import { ProfileContent } from '../components/home/ProfileContent';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 
@@ -154,7 +155,9 @@ export const HomeScreen = () => {
           </>
         ) : activeTab === 'Your Moments' ? (
           <YourMomentsContent />
-        ) : null /* Profile tab — future */}
+        ) : activeTab === 'Profile' ? (
+          <ProfileContent />
+        ) : null}
 
         {/* Shared Tab Bar — always at the bottom */}
         <TopTabBar activeTab={activeTab} onTabPress={handleTabPress} />
