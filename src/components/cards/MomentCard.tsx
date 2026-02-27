@@ -11,6 +11,7 @@ import { BellIcon } from '../icons/BellIcon';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AnimatedCard, AnimatedPressable, AnimatedView } from '../animated';
+import { Shadow } from 'react-native-shadow-2';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -47,19 +48,26 @@ export const MomentCard: React.FC<MomentCardProps> = ({
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
-    <AnimatedCard style={styles.cardContainer}>
-      {/* Header section */}
-      <View style={styles.headerRow}>
-        <Image 
-          // source={{ uri: profileImageUrl || `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=EAEAEA&color=263238` }} 
-          source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
-          style={styles.avatar} 
-        />
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.userName}>{userName}</Text>
-          <Text style={styles.userRole}>{userRole}</Text>
+    <AnimatedCard style={{ marginBottom: 16, width: '100%' }}>
+      <Shadow
+        distance={8}
+        startColor="#0000000A"
+        offset={[0, 8]}
+        style={styles.cardContainer}
+        containerStyle={{ width: '100%' }}
+      >
+        {/* Header section */}
+        <View style={styles.headerRow}>
+          <Image 
+            // source={{ uri: profileImageUrl || `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=EAEAEA&color=263238` }} 
+            source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
+            style={styles.avatar} 
+          />
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.userName}>{userName}</Text>
+            <Text style={styles.userRole}>{userRole}</Text>
+          </View>
         </View>
-      </View>
 
       <View style={styles.divider} />
 
@@ -93,33 +101,48 @@ export const MomentCard: React.FC<MomentCardProps> = ({
       <View style={styles.footerRow}>
         {isInCall && (
           <View style={styles.inCallWrapper}>
-            <View style={styles.inCallDot} />
+            <Shadow
+              distance={2}
+              startColor="rgba(209,0,0,0.5)"
+              style={styles.inCallDot}
+            >
+              <View />
+            </Shadow>
             <Text style={styles.inCallText}>In call</Text>
           </View>
         )}
-        <AnimatedPressable 
-          style={[
-            styles.mainButton, 
-            buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
-            isInCall && styles.disabledButton
-          ]}
-          disabled={isInCall}
-          onPress={() => {
-            navigation.navigate('Ringing');
-          }}
-        >
-          <Text style={[
-            buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,
-            isInCall && styles.disabledButtonText
-          ]}>
-            {buttonType === 'NotifyMe' ? 'Notify me' : 'Share Your Wishes'}
-          </Text>
-          {buttonType === 'NotifyMe' ? (
-            <BellIcon size={20} color={COLORS.primary} />
-          ) : (
-            <VideoOutlineIcon size={20} color={isInCall ? '#9b9b9b' : COLORS.white} />
-          )}
-        </AnimatedPressable>
+        
+        {/* <Shadow
+          distance={buttonType === 'ShareWishes' && !isInCall ? 4 : 0}
+          startColor={buttonType === 'ShareWishes' && !isInCall ? "rgba(72,86,92,0.29)" : "transparent"}
+          offset={[0, 4]}
+          style={{ width: '100%', borderRadius: 10 }}
+          containerStyle={{ flex: 1, marginRight: 10 }}
+        > */}
+          <AnimatedPressable 
+            style={[
+              styles.mainButton, 
+              buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
+              isInCall && styles.disabledButton
+            ]}
+            disabled={isInCall}
+            onPress={() => {
+              navigation.navigate('Ringing');
+            }}
+          >
+            <Text style={[
+              buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,
+              isInCall && styles.disabledButtonText
+            ]}>
+              {buttonType === 'NotifyMe' ? 'Notify me' : 'Share Your Wishes'}
+            </Text>
+            {buttonType === 'NotifyMe' ? (
+              <BellIcon size={20} color={COLORS.primary} />
+            ) : (
+              <VideoOutlineIcon size={20} color={isInCall ? '#9b9b9b' : COLORS.white} />
+            )}
+          </AnimatedPressable>
+        {/* </Shadow> */}
         
         <AnimatedPressable style={styles.likeButtonContainer}>
           {likesCount > 0 ? (
@@ -132,25 +155,20 @@ export const MomentCard: React.FC<MomentCardProps> = ({
           </Text>
         </AnimatedPressable>
       </View>
+      </Shadow>
     </AnimatedCard>
   );
 };
 
 const styles = StyleSheet.create({
   cardContainer: {
+    width: '100%',
     backgroundColor: COLORS.background2,
     borderWidth: 1.5,
     borderColor: COLORS.white,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 18,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 0, // Removed elevation to fix gray border on Android
-    width: '100%',
   },
   headerRow: {
     flexDirection: 'row',
@@ -228,8 +246,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 10,
-    flex: 1,
-    marginRight: 10,
+    width: '90%',
     gap: 10, // React Native spacing between text and icon
   },
   notifyButton: {
@@ -239,11 +256,6 @@ const styles = StyleSheet.create({
   },
   wishesButton: {
     backgroundColor: COLORS.surfaceBluePrimary,
-    shadowColor: '#48565C',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.29,
-    shadowRadius: 11,
-    elevation: 4,
   },
   notifyButtonText: {
     ...FONTS.styles.subTitleSemibold14,
@@ -265,11 +277,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#d10000',
-    shadowColor: '#d10000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3,
-    elevation: 2,
     marginRight: 4,
   },
   inCallText: {
@@ -281,8 +288,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ddd',
-    shadowOpacity: 0,
-    elevation: 0,
   },
   disabledButtonText: {
     color: '#9b9b9b',

@@ -12,6 +12,7 @@ import Svg, { Path, Defs, RadialGradient, LinearGradient, Stop, Circle, Rect } f
 import { COLORS, FONTS } from '../../theme';
 import { PlusIcon } from '../icons/PlusIcon';
 import { AnimatedView, AnimatedPressable, AnimatedCard, AnimatedListItem } from '../../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -219,10 +220,17 @@ const SubscribeTabContent: React.FC = () => (
       <View style={styles.subFadeOverlay} pointerEvents="none" />
 
       {/* Subscribe CTA button */}
-      <AnimatedPressable
-        style={styles.subButton}>
-        <Text style={styles.subButtonText}>Subscribe</Text>
-      </AnimatedPressable>
+      <Shadow
+        distance={4}
+        startColor="rgba(72,86,92,0.15)"
+        offset={[0, 4]}
+        style={{ borderRadius: 10 }}
+        containerStyle={{ alignSelf: 'center' }}
+      >
+        <AnimatedPressable style={styles.subButton}>
+          <Text style={styles.subButtonText}>Subscribe</Text>
+        </AnimatedPressable>
+      </Shadow>
 
       {/* Footer note */}
       <Text style={styles.subFooterNote}>Modify or Unsubscribe anytime</Text>
@@ -317,19 +325,36 @@ export const YourMomentsContent: React.FC = () => {
         <View style={styles.innerTabsWrapper}>
           {(['Custom', 'Subscribe', 'Archive'] as InnerTab[]).map(tab => {
             const isActive = activeInnerTab === tab;
-            return (
+            const tabContent = (
               <AnimatedPressable
                 key={tab}
                 onPress={() => setActiveInnerTab(tab)}
-                style={[styles.innerTab, getActiveTabStyle(tab)]}>
+                style={[styles.innerTab, getActiveTabStyle(tab)]}
+              >
                 <Text
                   style={[
                     styles.innerTabText,
                     isActive ? styles.innerTabTextActive : styles.innerTabTextInactive,
-                  ]}>
+                  ]}
+                >
                   {tab}
                 </Text>
               </AnimatedPressable>
+            );
+
+            return isActive ? (
+              <Shadow
+                key={tab}
+                distance={4}
+                startColor="rgba(72,86,92,0.15)"
+                offset={[0, 2]}
+                style={{ width: '100%', height: '100%', borderRadius: 8 }}
+                containerStyle={{ flex: 1, height: 38 }}
+              >
+                {tabContent}
+              </Shadow>
+            ) : (
+              tabContent
             );
           })}
         </View>
@@ -460,20 +485,10 @@ const styles = StyleSheet.create({
   // Blue active (Custom / Archive)
   innerTabActive: {
     backgroundColor: COLORS.surfaceBluePrimary,
-    shadowColor: 'rgba(72,86,92,0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 4,
   },
   // Dark active (Subscribe — matches Figma exactly)
   innerTabActiveSubscribe: {
     backgroundColor: '#263238',
-    shadowColor: 'rgba(72,86,92,0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 4,
   },
   innerTabText: {
     fontFamily: FONTS.family,
@@ -632,11 +647,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: 258,
     // Inner shadows not directly possible in RN; simulated with opacity on button background
-    shadowColor: 'rgba(72,86,92,0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 4,
   },
   subButtonText: {
     fontFamily: FONTS.family,
@@ -787,11 +797,6 @@ const styles = StyleSheet.create({
     borderRadius: 29,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
     zIndex: 20,
   },
 });

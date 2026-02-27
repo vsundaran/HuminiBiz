@@ -15,6 +15,7 @@ import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
 import { VideoIcon } from '../assets/icons/VideoIcon';
 import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 type RootStackParamList = {
   Home: undefined;
@@ -81,12 +82,20 @@ export const CallCompletedScreen = () => {
         <AnimatedView animation="slideUp" delay={300} style={styles.bottomWrapper}>
           <View style={styles.actionsContainer}>
             {/* Connect more — dark primary button with inner shadow */}
-            <AnimatedPressable
-              style={styles.connectMoreButton}
-              onPress={handleConnectMore}>
-              {/* <VideoIcon size={20} color={COLORS.white} /> */}
-              <Text style={styles.connectMoreText}>Connect more</Text>
-            </AnimatedPressable>
+            <Shadow
+              distance={6}
+              startColor="rgba(72,86,92,0.29)"
+              offset={[0, 4]}
+              style={{ width: '100%', borderRadius: 10 }}
+              containerStyle={{ width: '100%' }}
+            >
+              <AnimatedPressable
+                style={styles.connectMoreButton}
+                onPress={handleConnectMore}>
+                {/* <VideoIcon size={20} color={COLORS.white} /> */}
+                <Text style={styles.connectMoreText}>Connect more</Text>
+              </AnimatedPressable>
+            </Shadow>
 
             {/* Report — light red button */}
             <AnimatedPressable
@@ -193,12 +202,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     paddingHorizontal: 32,
-    // Drop shadow
-    shadowColor: 'rgba(72, 86, 92, 0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 6,
   },
   connectMoreText: {
     fontFamily: FONTS.styles.subTitleSemibold14.fontFamily,

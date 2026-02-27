@@ -6,6 +6,7 @@ import { VideoOutlineIcon } from '../icons/VideoOutlineIcon';
 import { SubscribeBg1Icon } from '../icons/SubscribeBg1Icon';
 import { SubscribeBg2Icon } from '../icons/SubscribeBg2Icon';
 import { SubscribeBg3Icon } from '../icons/SubscribeBg3Icon';
+import { AnimatedView } from '../animated';
 interface SubscribeCardProps {
   onSubscribePress?: () => void;
   subscriberCount?: number;
@@ -16,7 +17,8 @@ export const SubscribeCard: React.FC<SubscribeCardProps> = ({
   subscriberCount = 55
 }) => {
   return (
-    <View style={styles.subscribeCard}>
+     <AnimatedView animation="slideDown">
+      <View style={styles.subscribeCard}>
       {/* Background Gradient */}
       <View style={[StyleSheet.absoluteFill, { borderRadius: 16, overflow: 'hidden' }]}>
         <Svg height="100%" width="100%">
@@ -52,6 +54,7 @@ export const SubscribeCard: React.FC<SubscribeCardProps> = ({
         </Text>
       </View>
     </View>
+    </AnimatedView>
   );
 };
 

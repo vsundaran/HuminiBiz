@@ -14,6 +14,7 @@ import { SubscribeCard } from '../components/cards/SubscribeCard';
 import { YourMomentsContent } from '../components/home/YourMomentsContent';
 import { ProfileContent } from '../components/home/ProfileContent';
 import { AnimatedScreen, AnimatedPressable, AnimatedView } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 
@@ -150,13 +151,21 @@ export const HomeScreen = () => {
             </ScrollView>
 
             {/* FAB for Home tab */}
-            <AnimatedView animation="scale" delay={400} style={styles.fab}>
-              <AnimatedPressable
-                style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
-                onPress={() => navigation.navigate('CreateMoment')}
+            <AnimatedView animation="scale" delay={400} style={styles.fabContainer}>
+              <Shadow
+                distance={5}
+                startColor="rgba(255,255,255,0.5)"
+                offset={[0, 2]}
+                style={styles.fab}
+                containerStyle={styles.fab}
               >
-                <PlusIcon size={24} color={COLORS.primary} />
-              </AnimatedPressable>
+                <AnimatedPressable
+                  style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+                  onPress={() => navigation.navigate('CreateMoment')}
+                >
+                  <PlusIcon size={24} color={COLORS.primary} />
+                </AnimatedPressable>
+              </Shadow>
             </AnimatedView>
           </>
         ) : activeTab === 'Your Moments' ? (
@@ -228,21 +237,18 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 120,
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
     bottom: 110,
     right: 16,
+    zIndex: 20,
+  },
+  fab: {
     width: 60,
     height: 60,
     backgroundColor: '#FFE15B',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#FFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 5,
-    zIndex: 20,
   },
 });

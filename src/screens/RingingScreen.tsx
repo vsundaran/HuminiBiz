@@ -21,6 +21,7 @@ import { PhoneIcon } from '../assets/icons/PhoneIcon';
 import { ArrowLeftLineIcon } from '../assets/icons/ArrowLeftLineIcon';
 import { COLORS, FONTS, SIZES } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 type RootStackParamList = {
   Home: undefined;
@@ -119,14 +120,22 @@ export const RingingScreen = () => {
         </View>
 
         {/* Context Card Card */}
-        <AnimatedView animation="slideUp" delay={200} style={styles.messageCard}>
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>Wishes | Work anniversary</Text>
-          </View>
-          <Text style={styles.messageText}>
-            Today is my work anniversary! Feel free to call me and share your wishes or
-            celebrate this moment together.
-          </Text>
+        <AnimatedView animation="slideUp" delay={200} style={{ width: '85%', maxWidth: 340 }}>
+          <Shadow
+            distance={8}
+            startColor="#0000000A"
+            offset={[0, 8]}
+            style={styles.messageCard}
+            containerStyle={{ width: '100%' }}
+          >
+            <View style={styles.chip}>
+              <Text style={styles.chipText}>Wishes | Work anniversary</Text>
+            </View>
+            <Text style={styles.messageText}>
+              Today is my work anniversary! Feel free to call me and share your wishes or
+              celebrate this moment together.
+            </Text>
+          </Shadow>
         </AnimatedView>
 
         {/* Bottom Section / Actions */}
@@ -283,8 +292,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#C8CFD3',
   },
   messageCard: {
-    width: '85%',
-    maxWidth: 340,
+    width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 16,
     borderWidth: 1.5,
@@ -293,11 +301,6 @@ const styles = StyleSheet.create({
     paddingBottom: 22,
     paddingHorizontal: 19,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2,
   },
   chip: {
     backgroundColor: 'rgba(223, 255, 212, 0.6)',

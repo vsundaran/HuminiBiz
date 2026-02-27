@@ -23,6 +23,7 @@ import { CalendarIcon } from '../components/icons/CalendarIcon';
 import { ClockIcon } from '../components/icons/ClockIcon';
 import { DropdownArrowIcon } from '../components/icons/DropdownArrowIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Category = 'Wishes' | 'Celebration' | 'Motivation' | 'Others';
@@ -330,12 +331,20 @@ export const CreateMomentScreen: React.FC = () => {
 
         {/* ── Create Moment Button ── */}
         <AnimatedView animation="slideUp" delay={400} style={styles.bottomBar}>
-          <AnimatedPressable 
-            style={styles.createButton} 
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.createButtonText}>Create Moment</Text>
-          </AnimatedPressable>
+          {/* <Shadow
+            distance={6}
+            startColor="rgba(72,86,92,0.29)"
+            offset={[0, 4]}
+            style={{ width: '100%', borderRadius: 10 }}
+            containerStyle={{ width: '100%' }}
+          > */}
+            <AnimatedPressable 
+              style={styles.createButton} 
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.createButtonText}>Create Moment</Text>
+            </AnimatedPressable>
+          {/* </Shadow> */}
         </AnimatedView>
       </KeyboardAvoidingView>
 
@@ -490,7 +499,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF8EE',
+    // backgroundColor: '#FAF8EE',
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 10,
@@ -647,11 +656,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: 'rgba(72, 86, 92, 0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 6,
   },
   createButtonText: {
     ...FONTS.styles.subTitleSemibold14,

@@ -15,6 +15,7 @@ import { RootStackParamList } from '../components/cards/MomentCard';
 
 import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 const { width, height } = Dimensions.get('window');
 
@@ -70,12 +71,19 @@ export const VideoCallScreen = () => {
         </AnimatedView>
 
         {/* Small floating video view (Local user) */}
-        <AnimatedView animation="scale" delay={300} style={styles.localVideoContainer}>
-          <View />
-          {/* <Image
-            source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
-            style={styles.localVideo}
-          /> */}
+        <AnimatedView animation="scale" delay={300} style={{ position: 'absolute', top: 190, right: 20 }}>
+          <Shadow
+            distance={5}
+            startColor="rgba(0,0,0,0.3)"
+            offset={[0, 4]}
+            style={styles.localVideoContainer}
+          >
+            <View />
+            {/* <Image
+              source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
+              style={styles.localVideo}
+            /> */}
+          </Shadow>
         </AnimatedView>
 
         <AnimatedView animation="slideUp" delay={100} style={styles.bottomSection}>
@@ -176,18 +184,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   localVideoContainer: {
-    position: 'absolute',
-    top: 190,
-    right: 20,
     width: 120,
     height: 160,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },

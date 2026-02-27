@@ -114,6 +114,7 @@ const ReasonRow = React.memo(
     const isSelectedOthers = selected && isOthers;
 
     return (
+      
       <AnimatedPressable
         style={[
           styles.reasonRow,
@@ -255,6 +256,7 @@ export const SelectReasonScreen = () => {
             {/* Reason rows */}
             <View style={styles.reasonList}>
               {REASONS.map(reason => (
+                
                 <React.Fragment key={reason.id}>
                   <ReasonRow
                     emoji={reason.emoji}

@@ -4,9 +4,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, Filter, FeFlood, FeBlend, FeGaussianBlur } from 'react-native-svg';
+import { Shadow } from 'react-native-shadow-2';
+import Svg, {
+  Path,
+  Defs,
+  LinearGradient,
+  Stop,
+  Filter,
+  FeFlood,
+  FeBlend,
+  FeGaussianBlur,
+} from 'react-native-svg';
 import { COLORS, FONTS } from '../../theme';
 import { HomeIcon } from '../icons/HomeIcon';
 import { SparklesIcon } from '../icons/SparklesIcon';
@@ -21,35 +30,36 @@ interface TopTabBarProps {
 
 /**
  * Renders the warm yellow glow highlight that appears above the active tab icon.
- * Extracted from Figma node 561:2549 — Vector 37 with Gaussian blur.
+ * Pixel-perfect implementation from Figma node 561:2549 — Vector 37 with Gaussian blur.
+ * viewBox: 78×71, gaussian blur stdDeviation 7.5, gradient #F7EBB9 → #FFEC9B
  */
 const TabGlowBg = () => (
   <Svg
-    width={88}
-    height={51}
-    viewBox="0 0 78 71"
+    width={78}
+    height={57}
+    viewBox="0 0 78 57"
     fill="none"
     style={styles.glowBg}
   >
     <Defs>
       <Filter
-        id="filter0_f"
+        id="filter0_f_glow"
         x="0"
-        y="0"
+        y="-14"
         width="78"
         height="71"
         filterUnits="userSpaceOnUse"
       >
-        <FeFlood floodOpacity="0" result="BackgroundImageFix" />
+        <FeFlood floodOpacity={0} result="BackgroundImageFix" />
         <FeBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-        <FeGaussianBlur stdDeviation="7.5" result="effect1_foregroundBlur" />
+        <FeGaussianBlur stdDeviation={7.5} result="effect1_foregroundBlur_glow" />
       </Filter>
       <LinearGradient
-        id="paint0_linear"
+        id="paint0_linear_glow"
         x1="39"
-        y1="12.8421"
+        y1="-1.15789"
         x2="39"
-        y2="56"
+        y2="42"
         gradientUnits="userSpaceOnUse"
       >
         <Stop stopColor="#F7EBB9" />
@@ -57,9 +67,9 @@ const TabGlowBg = () => (
       </LinearGradient>
     </Defs>
     <Path
-      d="M27.5 56L15 15H63L53 56H27.5Z"
-      fill="url(#paint0_linear)"
-      filter="url(#filter0_f)"
+      d="M27.5 42L15 1H63L53 42H27.5Z"
+      fill="url(#paint0_linear_glow)"
+      filter="url(#filter0_f_glow)"
     />
   </Svg>
 );
@@ -94,8 +104,15 @@ export const TopTabBar: React.FC<TopTabBarProps> = ({ activeTab, onTabPress }) =
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabsWrapper}>
-        {tabs.map(({ key, label }) => {
+      <Shadow
+        distance={4}
+        startColor="#00000010"
+        offset={[0, -1]}
+        style={{ width: '100%', height: '100%', backgroundColor: '#F4F4F4' }}
+        containerStyle={{ width: '100%', height: '100%' }}
+      >
+        <View style={styles.tabsWrapper}>
+          {tabs.map(({ key, label }) => {
           const isActive = activeTab === key;
           return (
             <TouchableOpacity
@@ -140,7 +157,8 @@ export const TopTabBar: React.FC<TopTabBarProps> = ({ activeTab, onTabPress }) =
             </TouchableOpacity>
           );
         })}
-      </View>
+        </View>
+      </Shadow>
     </View>
   );
 };
@@ -151,13 +169,7 @@ const styles = StyleSheet.create({
     width: '100%',
     position: 'absolute',
     bottom: 0,
-    backgroundColor: '#F4F4F4',
-    // Hairline shadow to separate from content
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 8,
+    backgroundColor: 'transparent',
   },
   tabsWrapper: {
     flex: 1,
@@ -175,7 +187,7 @@ const styles = StyleSheet.create({
   },
   glowBg: {
     position: 'absolute',
-    top: -5,
+    top: 0,
     alignSelf: 'center',
   },
   activeLine: {

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -40,8 +40,14 @@ function App(): React.JSX.Element {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <GluestackUIProvider config={gluestackConfig}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-            <NavigationContainer>
+            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+            <NavigationContainer theme={{
+              ...DefaultTheme,
+              colors: {
+                ...DefaultTheme.colors,
+                background: '#FFFFFF',
+              },
+            }}>
               <Stack.Navigator
                 initialRouteName="Home"
                 screenOptions={{

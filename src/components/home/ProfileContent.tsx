@@ -10,6 +10,7 @@ import {
 import { COLORS, FONTS } from '../../theme';
 import { HuminiMarkIcon } from '../icons/HuminiMarkIcon';
 import { AnimatedView, AnimatedPressable } from '../../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 // ─── Figma Asset URLs (served by Figma Dev MCP localhost server) ──────────────
 // Profile avatar
@@ -100,8 +101,16 @@ export const ProfileContent: React.FC = () => {
       showsVerticalScrollIndicator={false}>
 
       {/* ── User Info Card ─────────────────────────────────────────────── */}
-      <AnimatedView animation="slideUp" delay={0} style={styles.card}>
-        <View style={styles.userInfoTop}>
+      <AnimatedView animation="slideUp" delay={0} style={{ marginBottom: 16 }}>
+        <Shadow
+          distance={8}
+          startColor="#0000000A"
+          offset={[0, 8]}
+          style={{ width: '100%', borderRadius: 16 }}
+          containerStyle={{ width: '100%' }}
+        >
+          <View style={styles.card}>
+            <View style={styles.userInfoTop}>
           <Image 
           source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80' }} 
           style={styles.avatar} />
@@ -122,16 +131,26 @@ export const ProfileContent: React.FC = () => {
           <Text style={styles.infoLabel}>Department:</Text>
           <Text style={styles.infoValue}>Product Engineering</Text>
         </View>
+          </View>
+        </Shadow>
       </AnimatedView>
 
       {/* ── Top 3 Minutes Card ────────────────────────────────────────── */}
-      <AnimatedView animation="slideUp" delay={100} style={[styles.card, styles.leaderboardCard]}>
-        <Text style={styles.leaderboardTitle}>Top 3 Minutes In Humini</Text>
+      <AnimatedView animation="slideUp" delay={100} style={{ marginBottom: 16 }}>
+        <Shadow
+          distance={8}
+          startColor="#0000000A"
+          offset={[0, 8]}
+          style={{ width: '100%', borderRadius: 16 }}
+          containerStyle={{ width: '100%' }}
+        >
+          <View style={[styles.card, styles.leaderboardCard]}>
+            <Text style={styles.leaderboardTitle}>Top 3 Minutes In Humini</Text>
 
         <View style={styles.barsRow}>
           {/* 1st place — John (tallest, leftmost) */}
           <BarEntry
-            photo={johnPhoto}
+            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
             name="John"
             barHeight={MAX_BAR_HEIGHT}
             barColor="#F2E05A"
@@ -144,7 +163,7 @@ export const ProfileContent: React.FC = () => {
           />
           {/* 2nd place — Priya */}
           <BarEntry
-            photo={priyaPhoto}
+            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
             name="Priya"
             barHeight={123}
             barColor="#A8EEF0"
@@ -157,7 +176,7 @@ export const ProfileContent: React.FC = () => {
           />
           {/* 3rd place — Rahul */}
           <BarEntry
-            photo={rahulPhoto}
+            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
             name="Rahul"
             barHeight={88}
             barColor="#F5B8D9"
@@ -168,13 +187,23 @@ export const ProfileContent: React.FC = () => {
             rank="pink"
             topOffset={MAX_BAR_HEIGHT - 88 - 58}
           />
+          </View>
         </View>
-      </AnimatedView>
+      </Shadow>
+    </AnimatedView>
 
       {/* ── Stats Card ────────────────────────────────────────────────── */}
-      <AnimatedView animation="slideUp" delay={200} style={[styles.card, styles.statsCard]}>
-        {/* Top centred: total minutes */}
-        <View style={styles.statsTotalSection}>
+      <AnimatedView animation="slideUp" delay={200} style={{ marginBottom: 16 }}>
+        <Shadow
+          distance={8}
+          startColor="#0000000A"
+          offset={[0, 8]}
+          style={{ width: '100%', borderRadius: 16 }}
+          containerStyle={{ width: '100%' }}
+        >
+          <View style={[styles.card, styles.statsCard]}>
+            {/* Top centred: total minutes */}
+            <View style={styles.statsTotalSection}>
           <Text style={styles.statsNumber}>500</Text>
           <Text style={styles.statsLabel}>Total minutes spent</Text>
         </View>
@@ -191,9 +220,11 @@ export const ProfileContent: React.FC = () => {
           <View style={styles.statItem}>
             <Text style={styles.statsNumber}>32</Text>
             <Text style={styles.statsLabel}>Joy Received</Text>
+            </View>
           </View>
         </View>
-      </AnimatedView>
+      </Shadow>
+    </AnimatedView>
 
       {/* ── Logout Button ─────────────────────────────────────────────── */}
       <AnimatedView animation="slideUp" delay={300}>
@@ -222,17 +253,12 @@ const styles = StyleSheet.create({
 
   // ── Card shared ──
   card: {
+    width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: COLORS.white,
-    marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 2,
   },
 
   // ── User info card ──

@@ -8,6 +8,7 @@ import { ArrowLeftIcon } from '../assets/icons/ArrowLeftIcon';
 import { PenIcon } from '../assets/icons/PenIcon';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 const { width } = Dimensions.get('window');
 
@@ -152,18 +153,26 @@ export const OtpScreen = () => {
 
           {/* Submit Button */}
           <AnimatedView animation="slideUp" delay={200} style={styles.buttonPosition}>
-            <AnimatedPressable 
-                style={[styles.button, !isOtpComplete && styles.buttonDisabled]} 
-                onPress={handleLogin}
-                disabled={!isOtpComplete}
+            <Shadow
+              distance={isOtpComplete ? 5 : 0}
+              startColor="rgba(72,86,92,0.29)"
+              offset={[0, 4]}
+              style={{ width: '100%', borderRadius: 10 }}
+              containerStyle={{ width: '100%' }}
             >
-                <RNText style={[styles.buttonText, !isOtpComplete && styles.buttonTextDisabled]}>
-                Log in
-                </RNText>
-                <View style={styles.buttonIcon}>
-                    <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
-                </View>
-            </AnimatedPressable>
+              <AnimatedPressable 
+                  style={[styles.button, !isOtpComplete && styles.buttonDisabled]} 
+                  onPress={handleLogin}
+                  disabled={!isOtpComplete}
+              >
+                  <RNText style={[styles.buttonText, !isOtpComplete && styles.buttonTextDisabled]}>
+                  Log in
+                  </RNText>
+                  <View style={styles.buttonIcon}>
+                      <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
+                  </View>
+              </AnimatedPressable>
+            </Shadow>
           </AnimatedView>
         </View>
       </SafeAreaView>
@@ -302,16 +311,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#263238', 
     paddingHorizontal: 32,
     borderRadius: 10,
-    shadowColor: '#48565C',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.29,
-    shadowRadius: 11,
-    elevation: 5,
   },
   buttonDisabled: {
     backgroundColor: '#DDDDDD',
-    shadowOpacity: 0,
-    elevation: 0,
   },
   buttonText: {
     fontFamily: 'DM Sans',

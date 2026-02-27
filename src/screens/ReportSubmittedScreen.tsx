@@ -19,6 +19,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { Shadow } from 'react-native-shadow-2';
 
 // ─── Navigation Types ─────────────────────────────────────────────────────────
 
@@ -130,9 +131,14 @@ export const ReportSubmittedScreen = () => {
           {/* Third ring */}
           <GlowRing size={97} color="rgba(60,150,40,0.30)" delay={400} />
           {/* Innermost filled circle */}
-          <View style={styles.checkCircle}>
+          <Shadow
+            distance={8}
+            startColor="rgba(16,116,0,0.45)"
+            offset={[0, 4]}
+            style={styles.checkCircle}
+          >
             <CheckIcon />
-          </View>
+          </Shadow>
         </AnimatedView>
 
         {/* ── Title & Message card ── */}
@@ -150,11 +156,19 @@ export const ReportSubmittedScreen = () => {
 
         {/* ── Go To Home button ── */}
         <AnimatedView animation="slideUp" delay={300} style={{width: '100%'}}>
-          <AnimatedPressable
-            style={styles.goHomeButton}
-            onPress={handleGoHome}>
-            <Text style={styles.goHomeText}>Go To Home</Text>
-          </AnimatedPressable>
+          <Shadow
+            distance={6}
+            startColor="rgba(72,86,92,0.29)"
+            offset={[0, 4]}
+            style={{ width: '100%', borderRadius: 10 }}
+            containerStyle={{ width: '100%' }}
+          >
+            <AnimatedPressable
+              style={styles.goHomeButton}
+              onPress={handleGoHome}>
+              <Text style={styles.goHomeText}>Go To Home</Text>
+            </AnimatedPressable>
+          </Shadow>
         </AnimatedView>
       </SafeAreaView>
     </AnimatedScreen>
@@ -195,12 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A5E00',
     alignItems: 'center',
     justifyContent: 'center',
-    // drop shadow for depth
-    shadowColor: '#107400',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
   },
 
   /* ── Title ── */
@@ -245,12 +253,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    // outer drop shadow
-    shadowColor: 'rgba(72, 86, 92, 0.29)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 11,
-    elevation: 6,
   },
   goHomeText: {
     fontFamily: FONTS.family,
