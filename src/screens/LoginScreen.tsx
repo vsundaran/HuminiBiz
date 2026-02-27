@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HuminiLogo } from '../assets/icons/HuminiLogo';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 const { width } = Dimensions.get('window');
 
@@ -26,7 +27,7 @@ export const LoginScreen = () => {
   const isEmailEmpty = email.trim() === '';
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Background Gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -44,15 +45,17 @@ export const LoginScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {/* Logo Section */}
-          <View style={styles.logoContainer}>
+          <AnimatedView animation="slideDown" style={styles.logoContainer}>
             <HuminiLogo size={65} />
-          </View>
+          </AnimatedView>
 
           {/* Title */}
-          <RNText style={styles.title}>Log In</RNText>
+          <AnimatedView animation="slideUp" delay={100}>
+            <RNText style={styles.title}>Log In</RNText>
+          </AnimatedView>
 
           {/* Form Section */}
-          <View style={styles.formContainer}>
+          <AnimatedView animation="slideUp" delay={200} style={styles.formContainer}>
             <RNText style={styles.inputLabel}>Enter Org Email</RNText>
             
             <View style={styles.inputWrapper}>
@@ -66,25 +69,26 @@ export const LoginScreen = () => {
                 autoCapitalize="none"
               />
             </View>
-          </View>
+          </AnimatedView>
 
           {/* Submit Button */}
-          <TouchableOpacity 
-            style={[styles.button, isEmailEmpty && styles.buttonDisabled]} 
-            onPress={handleGetOTP}
-            disabled={isEmailEmpty}
-            activeOpacity={0.8}
-          >
-            <RNText style={[styles.buttonText, isEmailEmpty && styles.buttonTextDisabled]}>
-              Get OTP
-            </RNText>
-            <View style={styles.buttonIcon}>
-              <ArrowRightIcon size={20} color={isEmailEmpty ? '#9B9B9B' : '#FFFFFF'} />
-            </View>
-          </TouchableOpacity>
+          <AnimatedView animation="slideUp" delay={300} style={{ width: '100%' }}>
+            <AnimatedPressable 
+              style={[styles.button, isEmailEmpty && styles.buttonDisabled]} 
+              onPress={handleGetOTP}
+              disabled={isEmailEmpty}
+            >
+              <RNText style={[styles.buttonText, isEmailEmpty && styles.buttonTextDisabled]}>
+                Get OTP
+              </RNText>
+              <View style={styles.buttonIcon}>
+                <ArrowRightIcon size={20} color={isEmailEmpty ? '#9B9B9B' : '#FFFFFF'} />
+              </View>
+            </AnimatedPressable>
+          </AnimatedView>
         </View>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

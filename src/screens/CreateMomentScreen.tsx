@@ -22,6 +22,7 @@ import { ChevronLeftIcon } from '../components/icons/ChevronLeftIcon';
 import { CalendarIcon } from '../components/icons/CalendarIcon';
 import { ClockIcon } from '../components/icons/ClockIcon';
 import { DropdownArrowIcon } from '../components/icons/DropdownArrowIcon';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Category = 'Wishes' | 'Celebration' | 'Motivation' | 'Others';
@@ -198,15 +199,15 @@ export const CreateMomentScreen: React.FC = () => {
         </View>
 
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
+        <AnimatedView animation="slideDown" style={styles.header}>
+          <AnimatedPressable
             style={styles.backBtn}
             onPress={() => navigation.navigate('Home')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <ChevronLeftIcon size={24} color={COLORS.primary} />
-          </TouchableOpacity>
+          </AnimatedPressable>
           <Text style={styles.headerTitle}>Create Moment</Text>
-        </View>
+        </AnimatedView>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -214,7 +215,7 @@ export const CreateMomentScreen: React.FC = () => {
           keyboardShouldPersistTaps="handled">
 
           {/* ── Select Category ── */}
-          <View style={styles.section}>
+          <AnimatedView animation="slideUp" delay={100} style={styles.section}>
             <Text style={styles.sectionLabel}>Select Category</Text>
             <View style={styles.categoriesGrid}>
               {CATEGORY_CONFIG.map((cat) => {
@@ -238,10 +239,10 @@ export const CreateMomentScreen: React.FC = () => {
                 );
               })}
             </View>
-          </View>
+          </AnimatedView>
 
           {/* ── Sub Category ── */}
-          <View style={styles.fieldContainer}>
+          <AnimatedView animation="slideUp" delay={150} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Select sub category</Text>
             <TouchableOpacity
               style={styles.inputRow}
@@ -256,10 +257,10 @@ export const CreateMomentScreen: React.FC = () => {
               </Text>
               <DropdownArrowIcon size={20} color={COLORS.textSubHeadline} />
             </TouchableOpacity>
-          </View>
+          </AnimatedView>
 
           {/* ── Description ── */}
-          <View style={styles.fieldContainer}>
+          <AnimatedView animation="slideUp" delay={200} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Describe about your moment</Text>
             <View style={styles.descriptionContainer}>
               <TextInput
@@ -274,10 +275,10 @@ export const CreateMomentScreen: React.FC = () => {
               />
               <Text style={styles.charCounter}>{description.length}/100</Text>
             </View>
-          </View>
+          </AnimatedView>
 
           {/* ── Start Date ── */}
-          <View style={styles.fieldContainer}>
+          <AnimatedView animation="slideUp" delay={250} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Start date</Text>
             <TouchableOpacity
               style={styles.inputRow}
@@ -286,10 +287,10 @@ export const CreateMomentScreen: React.FC = () => {
               <Text style={styles.inputText}>{formatDate(startDate)}</Text>
               <CalendarIcon size={24} color={COLORS.textSubHeadline} />
             </TouchableOpacity>
-          </View>
+          </AnimatedView>
 
           {/* ── Availability Time ── */}
-          <View style={styles.fieldContainer}>
+          <AnimatedView animation="slideUp" delay={300} style={styles.fieldContainer}>
             <View style={styles.timeHeaderRow}>
               <Text style={styles.fieldLabel}>Availability to Receive call</Text>
               <View style={styles.timezoneRow}>
@@ -322,21 +323,20 @@ export const CreateMomentScreen: React.FC = () => {
                 <Text style={styles.durationText}>{duration}</Text>
               ) : null}
             </View>
-          </View>
+          </AnimatedView>
 
           <View style={styles.bottomSpacer} />
         </ScrollView>
 
         {/* ── Create Moment Button ── */}
-        <View style={styles.bottomBar}>
-          <TouchableOpacity 
+        <AnimatedView animation="slideUp" delay={400} style={styles.bottomBar}>
+          <AnimatedPressable 
             style={styles.createButton} 
-            activeOpacity={0.85}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.createButtonText}>Create Moment</Text>
-          </TouchableOpacity>
-        </View>
+          </AnimatedPressable>
+        </AnimatedView>
       </KeyboardAvoidingView>
 
       {/* ── Custom Date Picker Modal ── */}

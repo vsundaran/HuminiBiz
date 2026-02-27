@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 // ─── Navigation Types ─────────────────────────────────────────────────────────
 
@@ -113,14 +114,13 @@ const ReasonRow = React.memo(
     const isSelectedOthers = selected && isOthers;
 
     return (
-      <TouchableOpacity
+      <AnimatedPressable
         style={[
           styles.reasonRow,
           selected && styles.reasonRowSelected,
           isSelectedOthers && styles.reasonRowOthersSelected,
         ]}
-        onPress={onPress}
-        activeOpacity={0.72}>
+        onPress={onPress}>
         {/* Emoji icon */}
         <View style={styles.emojiBox}>
           <Text style={styles.emojiText}>{emoji}</Text>
@@ -141,7 +141,7 @@ const ReasonRow = React.memo(
             <CheckIcon />
           </View>
         )}
-      </TouchableOpacity>
+      </AnimatedPressable>
     );
   },
 );
@@ -221,16 +221,15 @@ export const SelectReasonScreen = () => {
 
       <SafeAreaView style={styles.flex}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
+        <AnimatedView animation="slideDown" style={styles.header}>
+          <AnimatedPressable
             style={styles.backButton}
             onPress={handleCancel}
-            activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <BackArrowIcon />
-          </TouchableOpacity>
+          </AnimatedPressable>
           <Text style={styles.headerTitle}>Report</Text>
-        </View>
+        </AnimatedView>
 
         {/* Scrollable content */}
         <ScrollView
@@ -241,7 +240,7 @@ export const SelectReasonScreen = () => {
           automaticallyAdjustKeyboardInsets={true}
           showsVerticalScrollIndicator={false}>
             {/* Safety banner */}
-            <View style={styles.safetyBanner}>
+            <AnimatedView animation="slideUp" delay={100} style={styles.safetyBanner}>
               <AlertTriangleIcon />
               <View style={styles.safetyTextBlock}>
                 <Text style={styles.safetyTitle}>Your safety matters</Text>
@@ -251,7 +250,7 @@ export const SelectReasonScreen = () => {
                   will remain confidential.
                 </Text>
               </View>
-            </View>
+            </AnimatedView>
 
             {/* Reason rows */}
             <View style={styles.reasonList}>
@@ -294,21 +293,19 @@ export const SelectReasonScreen = () => {
           </ScrollView>
 
         {/* Bottom action row */}
-        <View style={styles.bottomActionRow}>
-          <TouchableOpacity
+        <AnimatedView animation="slideUp" delay={200} style={styles.bottomActionRow}>
+          <AnimatedPressable
             style={styles.cancelButton}
-            onPress={handleCancel}
-            activeOpacity={0.7}>
+            onPress={handleCancel}>
             <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+          </AnimatedPressable>
 
-          <TouchableOpacity
+          <AnimatedPressable
             style={[
               styles.submitButton,
               canSubmit ? styles.submitActive : styles.submitDisabled,
             ]}
             onPress={handleSubmit}
-            activeOpacity={canSubmit ? 0.85 : 1}
             disabled={!canSubmit}>
             <Text
               style={[
@@ -317,8 +314,8 @@ export const SelectReasonScreen = () => {
               ]}>
               Submit
             </Text>
-          </TouchableOpacity>
-        </View>
+          </AnimatedPressable>
+        </AnimatedView>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );

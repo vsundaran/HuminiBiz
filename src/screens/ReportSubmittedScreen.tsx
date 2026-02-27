@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 // ─── Navigation Types ─────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ export const ReportSubmittedScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Gradient background: #FFFBEA → #F4F4F4 (top 30%) */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -121,7 +122,7 @@ export const ReportSubmittedScreen = () => {
 
       <SafeAreaView style={styles.safeArea}>
         {/* ── Success icon with pulsing glow rings ── */}
-        <View style={styles.iconSection}>
+        <AnimatedView animation="slideUp" delay={100} style={styles.iconSection}>
           {/* Outermost ring */}
           <GlowRing size={163} color="rgba(144,210,80,0.15)" delay={0} />
           {/* Second ring */}
@@ -132,28 +133,31 @@ export const ReportSubmittedScreen = () => {
           <View style={styles.checkCircle}>
             <CheckIcon />
           </View>
-        </View>
+        </AnimatedView>
 
-        {/* ── Title ── */}
-        <Text style={styles.title}>Report Submited</Text>
+        {/* ── Title & Message card ── */}
+        <AnimatedView animation="slideUp" delay={200} style={{width: '100%', alignItems: 'center'}}>
+          <Text style={styles.title}>Report Submited</Text>
 
         {/* ── Message card ── */}
-        <View style={styles.messageCard}>
-          <Text style={styles.messageText}>
-            Most moments here are built on respect and care. We appreciate you
-            helping maintain a positive workplace
-          </Text>
-        </View>
+          <View style={styles.messageCard}>
+            <Text style={styles.messageText}>
+              Most moments here are built on respect and care. We appreciate you
+              helping maintain a positive workplace
+            </Text>
+          </View>
+        </AnimatedView>
 
         {/* ── Go To Home button ── */}
-        <TouchableOpacity
-          style={styles.goHomeButton}
-          onPress={handleGoHome}
-          activeOpacity={0.85}>
-          <Text style={styles.goHomeText}>Go To Home</Text>
-        </TouchableOpacity>
+        <AnimatedView animation="slideUp" delay={300} style={{width: '100%'}}>
+          <AnimatedPressable
+            style={styles.goHomeButton}
+            onPress={handleGoHome}>
+            <Text style={styles.goHomeText}>Go To Home</Text>
+          </AnimatedPressable>
+        </AnimatedView>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

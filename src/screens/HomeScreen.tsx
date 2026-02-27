@@ -13,6 +13,7 @@ import { ViewAllButton } from '../components/buttons/ViewAllButton';
 import { SubscribeCard } from '../components/cards/SubscribeCard';
 import { YourMomentsContent } from '../components/home/YourMomentsContent';
 import { ProfileContent } from '../components/home/ProfileContent';
+import { AnimatedScreen, AnimatedPressable, AnimatedView } from '../components/animated';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 
@@ -27,7 +28,7 @@ export const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
+      <AnimatedScreen style={styles.container}>
         {/* Main Background Gradient using SVG */}
         <View style={StyleSheet.absoluteFill}>
           <Svg height="100%" width="100%">
@@ -44,13 +45,13 @@ export const HomeScreen = () => {
 
         {/* Header Section — only shown on the Home tab */}
         {activeTab === 'Home' && (
-          <View style={styles.headerSection}>
+          <AnimatedView animation="slideDown" style={styles.headerSection}>
             <HuminiLogo width={55} height={55} />
-            <TouchableOpacity style={styles.notificationBell}>
+            <AnimatedPressable style={styles.notificationBell}>
               <BellIcon size={30} color={COLORS.primary} />
               <View style={styles.notificationBadge} />
-            </TouchableOpacity>
-          </View>
+            </AnimatedPressable>
+          </AnimatedView>
         )}
 
         {/* ── Tab Content ── */}
@@ -149,12 +150,14 @@ export const HomeScreen = () => {
             </ScrollView>
 
             {/* FAB for Home tab */}
-            <TouchableOpacity
-              style={styles.fab}
-              onPress={() => navigation.navigate('CreateMoment')}
-              activeOpacity={0.85}>
-              <PlusIcon size={24} color={COLORS.primary} />
-            </TouchableOpacity>
+            <AnimatedView animation="scale" delay={400} style={styles.fab}>
+              <AnimatedPressable
+                style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+                onPress={() => navigation.navigate('CreateMoment')}
+              >
+                <PlusIcon size={24} color={COLORS.primary} />
+              </AnimatedPressable>
+            </AnimatedView>
           </>
         ) : activeTab === 'Your Moments' ? (
           <YourMomentsContent />
@@ -164,7 +167,7 @@ export const HomeScreen = () => {
 
         {/* Shared Tab Bar — always at the bottom */}
         <TopTabBar activeTab={activeTab} onTabPress={handleTabPress} />
-      </View>
+      </AnimatedScreen>
     </SafeAreaView>
   );
 };

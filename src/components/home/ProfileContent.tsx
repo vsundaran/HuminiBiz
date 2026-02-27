@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Image,
   Alert,
 } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
 import { HuminiMarkIcon } from '../icons/HuminiMarkIcon';
+import { AnimatedView, AnimatedPressable } from '../../components/animated';
 
 // ─── Figma Asset URLs (served by Figma Dev MCP localhost server) ──────────────
 // Profile avatar
@@ -100,7 +100,7 @@ export const ProfileContent: React.FC = () => {
       showsVerticalScrollIndicator={false}>
 
       {/* ── User Info Card ─────────────────────────────────────────────── */}
-      <View style={styles.card}>
+      <AnimatedView animation="slideUp" delay={0} style={styles.card}>
         <View style={styles.userInfoTop}>
           <Image 
           source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80' }} 
@@ -122,10 +122,10 @@ export const ProfileContent: React.FC = () => {
           <Text style={styles.infoLabel}>Department:</Text>
           <Text style={styles.infoValue}>Product Engineering</Text>
         </View>
-      </View>
+      </AnimatedView>
 
       {/* ── Top 3 Minutes Card ────────────────────────────────────────── */}
-      <View style={[styles.card, styles.leaderboardCard]}>
+      <AnimatedView animation="slideUp" delay={100} style={[styles.card, styles.leaderboardCard]}>
         <Text style={styles.leaderboardTitle}>Top 3 Minutes In Humini</Text>
 
         <View style={styles.barsRow}>
@@ -169,10 +169,10 @@ export const ProfileContent: React.FC = () => {
             topOffset={MAX_BAR_HEIGHT - 88 - 58}
           />
         </View>
-      </View>
+      </AnimatedView>
 
       {/* ── Stats Card ────────────────────────────────────────────────── */}
-      <View style={[styles.card, styles.statsCard]}>
+      <AnimatedView animation="slideUp" delay={200} style={[styles.card, styles.statsCard]}>
         {/* Top centred: total minutes */}
         <View style={styles.statsTotalSection}>
           <Text style={styles.statsNumber}>500</Text>
@@ -193,15 +193,16 @@ export const ProfileContent: React.FC = () => {
             <Text style={styles.statsLabel}>Joy Received</Text>
           </View>
         </View>
-      </View>
+      </AnimatedView>
 
       {/* ── Logout Button ─────────────────────────────────────────────── */}
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
-        activeOpacity={0.8}>
-        <Text style={styles.logoutText}>Log out</Text>
-      </TouchableOpacity>
+      <AnimatedView animation="slideUp" delay={300}>
+        <AnimatedPressable
+          style={styles.logoutButton}
+          onPress={handleLogout}>
+          <Text style={styles.logoutText}>Log out</Text>
+        </AnimatedPressable>
+      </AnimatedView>
 
       <View style={styles.bottomSpacer} />
     </ScrollView>

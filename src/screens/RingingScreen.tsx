@@ -20,6 +20,7 @@ import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
 import { PhoneIcon } from '../assets/icons/PhoneIcon';
 import { ArrowLeftLineIcon } from '../assets/icons/ArrowLeftLineIcon';
 import { COLORS, FONTS, SIZES } from '../theme';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 type RootStackParamList = {
   Home: undefined;
@@ -68,7 +69,7 @@ export const RingingScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Background Gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -86,7 +87,7 @@ export const RingingScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         {/* Top Section / User Profile */}
         <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
+          <AnimatedView animation="slideUp" delay={100} style={styles.avatarContainer}>
             <View style={styles.glowRef}>
               <AvatarGlowIcon size={200} />
             </View>
@@ -94,7 +95,7 @@ export const RingingScreen = () => {
               source={{ uri: 'https://i.pravatar.cc/300?img=68' }} // Adjust as needed
               style={styles.avatar}
             />
-          </View>
+          </AnimatedView>
 
           <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
           <Text style={styles.callRole}>Frappe Manager</Text>
@@ -118,7 +119,7 @@ export const RingingScreen = () => {
         </View>
 
         {/* Context Card Card */}
-        <View style={styles.messageCard}>
+        <AnimatedView animation="slideUp" delay={200} style={styles.messageCard}>
           <View style={styles.chip}>
             <Text style={styles.chipText}>Wishes | Work anniversary</Text>
           </View>
@@ -126,25 +127,25 @@ export const RingingScreen = () => {
             Today is my work anniversary! Feel free to call me and share your wishes or
             celebrate this moment together.
           </Text>
-        </View>
+        </AnimatedView>
 
         {/* Bottom Section / Actions */}
-        <View style={styles.actionsPillContainer}>
+        <AnimatedView animation="slideUp" delay={300} style={styles.actionsPillContainer}>
           {isDeclined ? (
             <View style={styles.declinedActionsContainer}>
               {/* Back Button */}
               <View style={styles.declinedActionWrapper}>
-                <TouchableOpacity style={styles.backOuter} activeOpacity={0.7} onPress={handleBack}>
+                <AnimatedPressable style={styles.backOuter} onPress={handleBack}>
                   <View style={styles.backInner}>
                     <ArrowLeftLineIcon size={24} color="#515B60" />
                   </View>
-                </TouchableOpacity>
+                </AnimatedPressable>
                 <Text style={styles.declinedActionText}>Back</Text>
               </View>
 
               {/* Call Again Button */}
               <View style={styles.declinedActionWrapper}>
-                <TouchableOpacity style={styles.callAgainOuter} activeOpacity={0.7} onPress={()=> navigation.navigate("VideoCall")}>
+                <AnimatedPressable style={styles.callAgainOuter} onPress={()=> navigation.navigate("VideoCall")}>
                   <View style={styles.callAgainInner}>
                     <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
                       <Defs>
@@ -157,21 +158,20 @@ export const RingingScreen = () => {
                     </Svg>
                     <PhoneIcon size={24} color="#486333" />
                   </View>
-                </TouchableOpacity>
+                </AnimatedPressable>
                 <Text style={styles.declinedActionText}>Call Again</Text>
               </View>
             </View>
           ) : (
             <View style={styles.actionsPill}>
               {/* Volume Button */}
-              <TouchableOpacity style={styles.greyButton} activeOpacity={0.7}>
+              <AnimatedPressable style={styles.greyButton}>
                 <VolumeHighGreyIcon size={24} />
-              </TouchableOpacity>
+              </AnimatedPressable>
 
               {/* Decline Button */}
-              <TouchableOpacity 
+              <AnimatedPressable 
                 style={styles.declineButton} 
-                activeOpacity={0.8}
                 onPress={handleDecline}
               >
                 <View style={styles.declineIconWrapper}>
@@ -186,12 +186,12 @@ export const RingingScreen = () => {
                   </Svg>
                   <PhoneDeclineIcon size={24} color={COLORS.white} />
                 </View>
-              </TouchableOpacity>
+              </AnimatedPressable>
             </View>
           )}
-        </View>
+        </AnimatedView>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

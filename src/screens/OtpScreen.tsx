@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeftIcon } from '../assets/icons/ArrowLeftIcon';
 import { PenIcon } from '../assets/icons/PenIcon';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 const { width } = Dimensions.get('window');
 
@@ -75,7 +76,7 @@ export const OtpScreen = () => {
   const isOtpComplete = otp.every(digit => digit !== '');
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Background Gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -92,18 +93,18 @@ export const OtpScreen = () => {
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
-        <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+        <AnimatedView animation="slideDown" style={styles.header}>
+            <AnimatedPressable onPress={handleBack} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
                
             style={{ transform: [{ rotate: '90deg' }] }}
             >
                 <ArrowLeftIcon size={24} color="#263238" />
-            </TouchableOpacity>
+            </AnimatedPressable>
             <RNText style={styles.headerTitle}>Enter OTP</RNText>
-        </View>
+        </AnimatedView>
 
         <View style={styles.content}>
-          <View style={styles.formContainer}>
+          <AnimatedView animation="slideUp" delay={100} style={styles.formContainer}>
             {/* Email Field (Disabled) */}
             <View style={styles.emailContainer}>
               <RNText style={styles.inputLabel}>Enter Org Email</RNText>
@@ -140,20 +141,19 @@ export const OtpScreen = () => {
                     Resend OTP in <RNText style={styles.resendTimer}>{timeLeft}</RNText>
                  </RNText>
                ) : (
-                 <TouchableOpacity onPress={handleResend}>
+                 <AnimatedPressable onPress={handleResend}>
                     <RNText style={styles.resendAction}>Resend</RNText>
-                 </TouchableOpacity>
+                 </AnimatedPressable>
                )}
             </View>
-          </View>
+          </AnimatedView>
 
           {/* Submit Button */}
-          <View style={styles.buttonPosition}>
-            <TouchableOpacity 
+          <AnimatedView animation="slideUp" delay={200} style={styles.buttonPosition}>
+            <AnimatedPressable 
                 style={[styles.button, !isOtpComplete && styles.buttonDisabled]} 
                 onPress={handleLogin}
                 disabled={!isOtpComplete}
-                activeOpacity={0.8}
             >
                 <RNText style={[styles.buttonText, !isOtpComplete && styles.buttonTextDisabled]}>
                 Log in
@@ -161,11 +161,11 @@ export const OtpScreen = () => {
                 <View style={styles.buttonIcon}>
                     <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
                 </View>
-            </TouchableOpacity>
-          </View>
+            </AnimatedPressable>
+          </AnimatedView>
         </View>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

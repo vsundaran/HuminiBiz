@@ -10,6 +10,7 @@ import { VideoOutlineIcon } from '../icons/VideoOutlineIcon';
 import { BellIcon } from '../icons/BellIcon';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AnimatedCard, AnimatedPressable, AnimatedView } from '../animated';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -46,7 +47,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
-    <View style={styles.cardContainer}>
+    <AnimatedCard style={styles.cardContainer}>
       {/* Header section */}
       <View style={styles.headerRow}>
         <Image 
@@ -96,7 +97,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
             <Text style={styles.inCallText}>In call</Text>
           </View>
         )}
-        <TouchableOpacity 
+        <AnimatedPressable 
           style={[
             styles.mainButton, 
             buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
@@ -118,9 +119,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
           ) : (
             <VideoOutlineIcon size={20} color={isInCall ? '#9b9b9b' : COLORS.white} />
           )}
-        </TouchableOpacity>
+        </AnimatedPressable>
         
-        <TouchableOpacity style={styles.likeButtonContainer}>
+        <AnimatedPressable style={styles.likeButtonContainer}>
           {likesCount > 0 ? (
             <HeartFillIcon size={28} />
           ) : (
@@ -129,9 +130,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
           <Text style={[styles.likeCountText, likesCount > 0 && { color: '#8b7200' }]}>
             {likesCount}
           </Text>
-        </TouchableOpacity>
+        </AnimatedPressable>
       </View>
-    </View>
+    </AnimatedCard>
   );
 };
 

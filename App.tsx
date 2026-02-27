@@ -10,6 +10,8 @@ import BootSplash from 'react-native-bootsplash';
 import { gluestackConfig } from './src/theme/gluestack.config';
 import { queryClient } from './src/services/api/queryClient';
 import { ErrorBoundary } from './src/components/global/ErrorBoundary';
+import { globalScreenOptions } from './src/animations';
+
 import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
@@ -30,9 +32,7 @@ function App(): React.JSX.Element {
       // You can implement any pre-fetching or setup here if required
     };
     init().finally(async () => {
-      setTimeout(async () => {
-        await BootSplash.hide({ fade: true });
-      }, 2000);
+      await BootSplash.hide({ fade: true });
     });
   }, []);
   return (
@@ -43,9 +43,9 @@ function App(): React.JSX.Element {
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
             <NavigationContainer>
               <Stack.Navigator
-                initialRouteName="Home"
+                initialRouteName="Login"
                 screenOptions={{
-                  headerShown: false,
+                  ...globalScreenOptions,
                 }}>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Otp" component={OtpScreen} />

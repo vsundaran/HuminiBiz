@@ -7,6 +7,7 @@ import { MomentCard } from '../components/cards/MomentCard';
 import { LiveMomentsBanner } from '../components/cards/LiveMomentsBanner';
 import { COLORS, FONTS } from '../theme';
 import { ArrowRightThinIcon } from '../components/icons/ArrowRightThinIcon';
+import { AnimatedScreen, AnimatedPressable, AnimatedView } from '../components/animated';
 
 type FilterTab = 'All' | 'Wishes' | 'Motivation' | 'Celebration';
 
@@ -18,7 +19,7 @@ export const LiveMomentsScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
+      <AnimatedScreen style={styles.container}>
         {/* Main Background Gradient using SVG */}
         <View style={StyleSheet.absoluteFill}>
           <Svg height="100%" width="100%">
@@ -34,29 +35,31 @@ export const LiveMomentsScreen = () => {
         </View>
 
         {/* Top Navigation */}
-        <View style={styles.topNav}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <AnimatedView animation="slideDown" style={styles.topNav}>
+          <AnimatedPressable onPress={() => navigation.goBack()} style={styles.backButton}>
             <View style={[{ transform: [{ rotate: '180deg' }] }]}>
               <ArrowRightThinIcon size={14} color="#000" />
             </View>
-          </TouchableOpacity>
+          </AnimatedPressable>
           <Text style={styles.title}>Live moments</Text>
-        </View>
+        </AnimatedView>
 
         {/* Filter Tabs Row */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsWrapper} contentContainerStyle={styles.tabsContainer}>
-          {filterTabs.map((tab) => (
-            <TouchableOpacity 
-              key={tab} 
-              style={[styles.filterChip, activeTab === tab && styles.filterChipActive]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={[styles.filterChipText, activeTab === tab && styles.filterChipTextActive]}>
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <AnimatedView animation="slideDown" delay={100}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsWrapper} contentContainerStyle={styles.tabsContainer}>
+            {filterTabs.map((tab) => (
+              <AnimatedPressable 
+                key={tab} 
+                style={[styles.filterChip, activeTab === tab && styles.filterChipActive]}
+                onPress={() => setActiveTab(tab)}
+              >
+                <Text style={[styles.filterChipText, activeTab === tab && styles.filterChipTextActive]}>
+                  {tab}
+                </Text>
+              </AnimatedPressable>
+            ))}
+          </ScrollView>
+        </AnimatedView>
 
         {/* Content List */}
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -115,7 +118,7 @@ export const LiveMomentsScreen = () => {
           
           <View style={styles.bottomSpacer} />
         </ScrollView>
-      </View>
+      </AnimatedScreen>
     </SafeAreaView>
   );
 };

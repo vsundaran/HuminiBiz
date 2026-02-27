@@ -14,6 +14,7 @@ import { RotateCameraIcon } from '../assets/icons/RotateCameraIcon';
 import { RootStackParamList } from '../components/cards/MomentCard';
 
 import { COLORS, FONTS } from '../theme';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 const { width, height } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ export const VideoCallScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Full Screen Background Video/Image */}
       {/* <Image
         source={{ uri: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=1000' }}
@@ -63,20 +64,21 @@ export const VideoCallScreen = () => {
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header section */}
-        <View style={styles.header}>
+        <AnimatedView animation="slideDown" style={styles.header}>
           <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
           <Text style={styles.callRole}>Frappe Manager</Text>
-        </View>
+        </AnimatedView>
 
         {/* Small floating video view (Local user) */}
-        <View style={styles.localVideoContainer}>
+        <AnimatedView animation="scale" delay={300} style={styles.localVideoContainer}>
+          <View />
           {/* <Image
             source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
             style={styles.localVideo}
           /> */}
-        </View>
+        </AnimatedView>
 
-        <View style={styles.bottomSection}>
+        <AnimatedView animation="slideUp" delay={100} style={styles.bottomSection}>
           {/* Timer */}
           <View style={styles.timerPill}>
             <Text style={styles.timerText}>00:30</Text>
@@ -85,29 +87,28 @@ export const VideoCallScreen = () => {
           {/* Call Controls Box */}
           <View style={styles.controlsBar}>
             {/* Rotate Camera */}
-            <TouchableOpacity style={styles.iconBtnWhite} activeOpacity={0.7}>
+            <AnimatedPressable style={styles.iconBtnWhite}>
               <RotateCameraIcon size={24} color="#263238" />
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             {/* Volume */}
-            <TouchableOpacity style={styles.iconBtnTranslucent} activeOpacity={0.7}>
+            <AnimatedPressable style={styles.iconBtnTranslucent}>
               <VolumeHighGreyIcon size={24} />
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             {/* Video */}
-            <TouchableOpacity style={styles.iconBtnWhite} activeOpacity={0.7}>
+            <AnimatedPressable style={styles.iconBtnWhite}>
               <VideoCameraIcon size={24} color="#263238" />
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             {/* Microphone */}
-            <TouchableOpacity style={styles.iconBtnWhite} activeOpacity={0.7}>
+            <AnimatedPressable style={styles.iconBtnWhite}>
               <MicrophoneIcon size={24} color="#263238" />
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             {/* End Call */}
-            <TouchableOpacity 
+            <AnimatedPressable 
               style={styles.endCallBtn} 
-              activeOpacity={0.8}
               onPress={handleEndCall}
             >
               <View style={styles.declineIconWrapper}>
@@ -122,11 +123,11 @@ export const VideoCallScreen = () => {
                 </Svg>
                 <PhoneDeclineIcon size={24} color={COLORS.white} />
               </View>
-            </TouchableOpacity>
+            </AnimatedPressable>
           </View>
-        </View>
+        </AnimatedView>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

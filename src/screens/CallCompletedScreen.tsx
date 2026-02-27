@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
 import { VideoIcon } from '../assets/icons/VideoIcon';
 import { COLORS, FONTS } from '../theme';
+import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 
 type RootStackParamList = {
   Home: undefined;
@@ -35,7 +36,7 @@ export const CallCompletedScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <AnimatedScreen style={styles.container}>
       {/* Background Gradient: #FFFBEA → #F4F4F4 (top 30%) */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -53,7 +54,7 @@ export const CallCompletedScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         {/* Avatar section */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatarContainer}>
+          <AnimatedView animation="slideUp" delay={100} style={styles.avatarContainer}>
             {/* Glow ring behind avatar */}
             <View style={styles.glowRef}>
               <AvatarGlowIcon size={200} />
@@ -62,45 +63,45 @@ export const CallCompletedScreen = () => {
               source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
               style={styles.avatar}
             />
-          </View>
+          </AnimatedView>
 
           {/* Call status */}
-          <Text style={styles.callCompletedText}>Call Completed</Text>
+          <AnimatedView animation="slideUp" delay={200} style={styles.nameBlock}>
+            <Text style={styles.callCompletedText}>Call Completed</Text>
+          </AnimatedView>
 
           {/* Name & Role */}
-          <View style={styles.nameBlock}>
+          <AnimatedView animation="slideUp" delay={200} style={styles.nameBlock}>
             <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
             <Text style={styles.callRole}>Frappe Manager</Text>
-          </View>
+          </AnimatedView>
         </View>
 
         {/* Bottom action buttons */}
-        <View style={styles.bottomWrapper}>
+        <AnimatedView animation="slideUp" delay={300} style={styles.bottomWrapper}>
           <View style={styles.actionsContainer}>
             {/* Connect more — dark primary button with inner shadow */}
-            <TouchableOpacity
+            <AnimatedPressable
               style={styles.connectMoreButton}
-              activeOpacity={0.85}
               onPress={handleConnectMore}>
               {/* <VideoIcon size={20} color={COLORS.white} /> */}
               <Text style={styles.connectMoreText}>Connect more</Text>
-            </TouchableOpacity>
+            </AnimatedPressable>
 
             {/* Report — light red button */}
-            <TouchableOpacity
+            <AnimatedPressable
               style={styles.reportButton}
-              activeOpacity={0.8}
               onPress={handleGoHome}>
               <Text style={styles.reportText}>Report</Text>
               <VideoIcon size={20} color="#B7131A" />
-            </TouchableOpacity>
+            </AnimatedPressable>
           </View>
 
           {/* Bottom home indicator placeholder */}
           <View style={styles.homeIndicator} />
-        </View>
+        </AnimatedView>
       </SafeAreaView>
-    </View>
+    </AnimatedScreen>
   );
 };
 

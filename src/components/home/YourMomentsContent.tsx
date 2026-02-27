@@ -11,6 +11,7 @@ import Svg, { Path, Defs, RadialGradient, LinearGradient, Stop, Circle, Rect } f
 
 import { COLORS, FONTS } from '../../theme';
 import { PlusIcon } from '../icons/PlusIcon';
+import { AnimatedView, AnimatedPressable, AnimatedCard, AnimatedListItem } from '../../components/animated';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -87,7 +88,7 @@ type MomentCardProps = {
 };
 
 const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCardProps) => (
-  <View style={styles.card}>
+  <AnimatedCard style={styles.card}>
     {/* Header strip */}
     <View style={[styles.cardHeader, { backgroundColor: data.headerBg }]}>
       <View style={styles.cardHeaderLeft}>
@@ -135,16 +136,15 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
               </>
             )}
           </View>
-          <TouchableOpacity
+          <AnimatedPressable
             style={styles.archiveButton}
-            onPress={() => onArchive(data.id)}
-            activeOpacity={0.75}>
+            onPress={() => onArchive(data.id)}>
             <Text style={styles.archiveText}>Archive</Text>
-          </TouchableOpacity>
+          </AnimatedPressable>
         </View>
       </View>
     </View>
-  </View>
+  </AnimatedCard>
 ));
 
 // ─── Subscribe Tab Content (Figma node 927-7862 / 1196-7098) ──────────────────
@@ -155,7 +155,7 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
  * a prominent dark Subscribe button. Pixel-perfect from Figma.
  */
 const SubscribeTabContent: React.FC = () => (
-  <View style={styles.subscribeWrapper}>
+  <AnimatedView animation="slideUp" style={styles.subscribeWrapper}>
     {/* ── Gradient card with decorative blobs ── */}
     <View style={styles.subscribeCard}>
       {/* Base linear gradient background: amber → peach */}
@@ -219,16 +219,15 @@ const SubscribeTabContent: React.FC = () => (
       <View style={styles.subFadeOverlay} pointerEvents="none" />
 
       {/* Subscribe CTA button */}
-      <TouchableOpacity
-        style={styles.subButton}
-        activeOpacity={0.85}>
+      <AnimatedPressable
+        style={styles.subButton}>
         <Text style={styles.subButtonText}>Subscribe</Text>
-      </TouchableOpacity>
+      </AnimatedPressable>
 
       {/* Footer note */}
       <Text style={styles.subFooterNote}>Modify or Unsubscribe anytime</Text>
     </View>
-  </View>
+  </AnimatedView>
 );
 
 // ─── Initial Data ─────────────────────────────────────────────────────────────
@@ -319,10 +318,9 @@ export const YourMomentsContent: React.FC = () => {
           {(['Custom', 'Subscribe', 'Archive'] as InnerTab[]).map(tab => {
             const isActive = activeInnerTab === tab;
             return (
-              <TouchableOpacity
+              <AnimatedPressable
                 key={tab}
                 onPress={() => setActiveInnerTab(tab)}
-                activeOpacity={0.8}
                 style={[styles.innerTab, getActiveTabStyle(tab)]}>
                 <Text
                   style={[
@@ -331,7 +329,7 @@ export const YourMomentsContent: React.FC = () => {
                   ]}>
                   {tab}
                 </Text>
-              </TouchableOpacity>
+              </AnimatedPressable>
             );
           })}
         </View>
@@ -351,14 +349,15 @@ export const YourMomentsContent: React.FC = () => {
                 <Text style={styles.emptyText}>No moments yet</Text>
               </View>
             ) : (
-              moments.map(moment => (
-                <MomentCard
-                  key={moment.id}
-                  data={moment}
-                  enabled={enabledMap[moment.id] ?? false}
-                  onToggle={handleToggle}
-                  onArchive={handleArchive}
-                />
+              moments.map((moment, index) => (
+                <AnimatedListItem key={moment.id} index={index}>
+                  <MomentCard
+                    data={moment}
+                    enabled={enabledMap[moment.id] ?? false}
+                    onToggle={handleToggle}
+                    onArchive={handleArchive}
+                  />
+                </AnimatedListItem>
               ))
             )
           ) : (
@@ -368,8 +367,10 @@ export const YourMomentsContent: React.FC = () => {
                           <Text style={styles.emptyText}>No archived moments</Text>
                         </View>
                       ) : (
-                        ARCHIVED_MOMENTS.map(moment => (
-                          <ArchiveMomentCard key={moment.id} data={moment} />
+                        ARCHIVED_MOMENTS.map((moment, index) => (
+                          <AnimatedListItem key={moment.id} index={index}>
+                            <ArchiveMomentCard data={moment} />
+                          </AnimatedListItem>
                         ))
                       )
           )}
@@ -383,7 +384,7 @@ export const YourMomentsContent: React.FC = () => {
 
 
 const ArchiveMomentCard = React.memo(({ data }: { data: MomentCardData }) => (
-  <View style={styles.card}>
+  <AnimatedCard style={styles.card}>
     {/* Header strip */}
     <View style={[styles.cardHeader, { backgroundColor: data.headerBg }]}>
       <View style={styles.cardHeaderLeft}>
@@ -426,7 +427,7 @@ const ArchiveMomentCard = React.memo(({ data }: { data: MomentCardData }) => (
         </View>
       </View>
     </View>
-  </View>
+  </AnimatedCard>
 ));
 
 
