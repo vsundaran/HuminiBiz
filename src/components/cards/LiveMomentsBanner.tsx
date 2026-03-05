@@ -28,8 +28,8 @@ export const LiveMomentsBanner: React.FC = () => {
       
       {/* Abstract Background SVGs */}
       <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 16 }]}>
-        <View style={{ position: 'absolute', top: -54.5, left: '50%', marginLeft: -61, width: 122, height: 122 }}>
-          <LiveMomentsGlowIcon width="100%" height="100%" />
+        <View style={{ position: 'absolute', top: '-60%', left: '37%', marginLeft: -61, width: 122, height: 122, opacity:0.5 }}>
+          <LiveMomentsGlowIcon width="180%" height="200%" />
         </View>
 
         <View style={{ position: 'absolute', top: 13.8, left: 15.5, width: 68, height: 82.5 }}>
@@ -84,9 +84,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter',
     fontWeight: '900', // Black
     fontSize: 36,
-    color: '#ff4e83',
+    color: '#FF4E83',
     letterSpacing: 1.8,
     marginBottom: 4,
+    // textShadowColor: '#ffffffff',
+    // textShadowOffset: { width: 0, height: 0 },
+    // textShadowRadius: 10,
     // Add text shadow if needed to match design exactly
   },
   subtitleText: {

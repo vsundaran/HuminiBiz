@@ -503,7 +503,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
         visible={logoutConfirmVisible}
         onCancel={() => setLogoutConfirmVisible(false)}
         onConfirm={confirmLogout}
-        title="Log out?"
+        title="Log out"
         message="You will be signed out of your account and returned to the login screen."
         confirmLabel="Log out"
         cancelLabel="Stay"

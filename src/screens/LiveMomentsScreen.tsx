@@ -1,26 +1,121 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { MomentCard } from '../components/cards/MomentCard';
 import { LiveMomentsBanner } from '../components/cards/LiveMomentsBanner';
 import { COLORS, FONTS } from '../theme';
 import { ArrowRightThinIcon } from '../components/icons/ArrowRightThinIcon';
 import { AnimatedScreen, AnimatedPressable, AnimatedView } from '../components/animated';
+import {
+  useInfiniteLiveMoments,
+  useInfiniteUpcomingMoments,
+  useInfiniteLaterMoments,
+} from '../hooks/useMoments';
+import { momentToCardProps } from '../utils/momentMapper';
+import { Moment } from '../types/moment.types';
+import { SkeletonLoader } from '../components/common/SkeletonLoader';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+type FeedType = 'live' | 'upcoming' | 'later';
 type FilterTab = 'All' | 'Wishes' | 'Motivation' | 'Celebration';
 
+type RootStackParamList = {
+  LiveMoments: { feedType?: FeedType } | undefined;
+};
+
+// ─── Header and skeleton constants ────────────────────────────────────────────
+const FILTER_TABS: FilterTab[] = ['All', 'Wishes', 'Motivation', 'Celebration'];
+
+// const SECTION_LABELS: Record<FeedType, string> = {
+//   live:     'Live moments',
+//   upcoming: 'In Next 2h',
+//   later:    'Others',
+// };
+
+// ─── Helper: flatten pages from infinite query result ─────────────────────────
+const flatPages = (data: any): Moment[] =>
+  data?.pages?.flatMap((p: Moment[]) => p) ?? [];
+
+// ─── LiveMomentsScreen ────────────────────────────────────────────────────────
 export const LiveMomentsScreen = () => {
   const navigation = useNavigation();
-  const [activeTab, setActiveTab] = useState<FilterTab>('All');
+  // const route = useRoute<RouteProp<RootStackParamList, 'LiveMoments'>>();
 
-  const filterTabs: FilterTab[] = ['All', 'Wishes', 'Motivation', 'Celebration'];
+  // Honour the feedType param — default to 'live'
+  // const initialFeed: FeedType = route.params?.feedType ?? 'live';
+
+  // const [activeFeed, setActiveFeed]       = useState<FeedType>(initialFeed);
+  const activeFeed = 'live'
+  const [activeFilter, setActiveFilter]   = useState<FilterTab>('All');
+
+  // ── Infinite queries for each feed type ───────────────────────────────────
+  const liveQuery     = useInfiniteLiveMoments();
+  const upcomingQuery = useInfiniteUpcomingMoments();
+  const laterQuery    = useInfiniteLaterMoments();
+
+  const queryMap: Record<FeedType, typeof liveQuery> = {
+    live:     liveQuery,
+    upcoming: upcomingQuery,
+    later:    laterQuery,
+  };
+
+  const activeQuery = queryMap[activeFeed];
+  const allMoments  = useMemo(() => flatPages(activeQuery.data), [activeQuery.data]);
+
+  // Load next page when user scrolls to the end
+  const loadMore = useCallback(() => {
+    if (activeQuery.hasNextPage && !activeQuery.isFetchingNextPage) {
+      activeQuery.fetchNextPage();
+    }
+  }, [activeQuery]);
+
+  // ── Render footer spinner / end-of-list indicator ─────────────────────────
+  const renderFooter = () => {
+    if (activeQuery.isFetchingNextPage) {
+      return <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: 20 }} />;
+    }
+    if (!activeQuery.hasNextPage && allMoments.length > 0) {
+      return <Text style={styles.endText}>You're all caught up 🎉</Text>;
+    }
+    return <View style={{ height: 40 }} />;
+  };
+
+  // ── Render each card ──────────────────────────────────────────────────────
+  const renderItem = useCallback(
+    ({ item }: { item: Moment }) => (
+      <MomentCard key={item._id} {...momentToCardProps(item, activeFeed)} />
+    ),
+    [activeFeed]
+  );
+
+  // ── Skeleton loading state ─────────────────────────────────────────────────
+  const renderSkeletons = () => (
+    <View style={styles.skeletonContainer}>
+      {[0, 1, 2].map((i) => (
+        <SkeletonLoader
+          key={i}
+          width="100%"
+          height={170}
+          borderRadius={16}
+          style={{ marginBottom: 16 }}
+        />
+      ))}
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <AnimatedScreen style={styles.container}>
-        {/* Main Background Gradient using SVG */}
+        {/* Background */}
         <View style={StyleSheet.absoluteFill}>
           <Svg height="100%" width="100%">
             <Defs>
@@ -37,92 +132,79 @@ export const LiveMomentsScreen = () => {
         {/* Top Navigation */}
         <AnimatedView animation="slideDown" style={styles.topNav}>
           <AnimatedPressable onPress={() => navigation.goBack()} style={styles.backButton}>
-            <View style={[{ transform: [{ rotate: '270deg' }] }]}>
+            <View style={{ transform: [{ rotate: '270deg' }] }}>
               <ArrowRightThinIcon size={14} color="#000" />
             </View>
           </AnimatedPressable>
           <Text style={styles.title}>Live moments</Text>
         </AnimatedView>
 
-        {/* Filter Tabs Row */}
+        {/* Feed type selector (Live / In Next 2h / Others) */}
+        {/* <AnimatedView animation="slideDown" delay={50} style={styles.feedTabsRow}>
+          {(['live', 'upcoming', 'later'] as FeedType[]).map((feed) => (
+            <TouchableOpacity
+              key={feed}
+              style={[styles.feedChip, activeFeed === feed && styles.feedChipActive]}
+              onPress={() => setActiveFeed(feed)}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.feedChipText, activeFeed === feed && styles.feedChipTextActive]}>
+                {SECTION_LABELS[feed]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </AnimatedView> */}
+
+        {/* Category filter chips */}
         <AnimatedView animation="slideDown" delay={100}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsWrapper} contentContainerStyle={styles.tabsContainer}>
-            {filterTabs.map((tab) => (
-              <AnimatedPressable 
-                key={tab} 
-                style={[styles.filterChip, activeTab === tab && styles.filterChipActive]}
-                onPress={() => setActiveTab(tab)}
+          <FlatList
+            data={FILTER_TABS}
+            horizontal
+            keyExtractor={(t) => t}
+            showsHorizontalScrollIndicator={false}
+            style={styles.tabsWrapper}
+            contentContainerStyle={styles.tabsContainer}
+            renderItem={({ item: tab }) => (
+              <AnimatedPressable
+                style={[styles.filterChip, activeFilter === tab && styles.filterChipActive]}
+                onPress={() => setActiveFilter(tab)}
               >
-                <Text style={[styles.filterChipText, activeTab === tab && styles.filterChipTextActive]}>
+                <Text style={[styles.filterChipText, activeFilter === tab && styles.filterChipTextActive]}>
                   {tab}
                 </Text>
               </AnimatedPressable>
-            ))}
-          </ScrollView>
+            )}
+          />
         </AnimatedView>
 
-        {/* Content List */}
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <LiveMomentsBanner />
-
-          <MomentCard
-            userName="Gnani Gnanasekaran"
-            userRole="Frappe Manager"
-            eventType="WorkAnniversary"
-            eventMessage="Today is my work anniversary! Feel free to call me and share your wishes or celebrate this moment together."
-            timeStr="Ends in 50m"
-            buttonType="ShareWishes"
-            likesCount={0}
+        {/* Content List — Infinite Scroll */}
+        {activeQuery.isLoading ? (
+          renderSkeletons()
+        ) : (
+          <FlatList
+            data={allMoments}
+            keyExtractor={(item) => item._id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.4}
+            ListHeaderComponent={<LiveMomentsBanner />}
+            ListFooterComponent={renderFooter}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No moments in this section right now.</Text>
+              </View>
+            }
+            removeClippedSubviews
           />
-
-          <MomentCard
-            userName="Rajashekar Reddy"
-            userRole="Associate Developer"
-            eventType="Promotion"
-            eventMessage="I’ve been promoted today, feel free to call and celebrate this moment."
-            timeStr="Ends in 45m"
-            buttonType="ShareWishes"
-            likesCount={0}
-          />
-
-          <MomentCard
-            userName="Tamilselvan G"
-            userRole="UX/UI Designer"
-            eventType="Birthday"
-            eventMessage="It’s my birthday today, feel free to call me and share your wishes."
-            timeStr="Ends in 45m"
-            buttonType="ShareWishes"
-            likesCount={0}
-          />
-          
-          <MomentCard
-            userName="Jones Israel"
-            userRole="Human Resources"
-            eventType="DeadlineStress"
-            eventMessage="I’m facing a tough deadline today, feel free to call and motivate me."
-            timeStr="Ends in 45m"
-            buttonType="ShareWishes"
-            likesCount={0}
-            isInCall={true}
-          />
-          
-          <MomentCard
-            userName="Prasad Kumar O"
-            userRole="Admin"
-            eventType="Birthday"
-            eventMessage="It’s my birthday today, feel free to call me and share your wishes."
-            timeStr="Ends in 45m"
-            buttonType="ShareWishes"
-            likesCount={0}
-          />
-          
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+        )}
       </AnimatedScreen>
     </SafeAreaView>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -136,22 +218,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 20,
+    paddingBottom: 12,
   },
   backButton: {
     marginRight: 8,
     padding: 4,
-    transform: [{rotate: '90deg'}]
+    transform: [{ rotate: '90deg' }],
   },
   title: {
     ...FONTS.styles.headlineBold24,
     fontSize: 18,
     color: '#263238',
-    letterSpacing: 0.5
+    letterSpacing: 0.5,
   },
+  // ── Feed type row ──────────────────────────────────────────────────────────
+  feedTabsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    gap: 8,
+  },
+  feedChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: '#FCFCFC',
+    borderWidth: 0.7,
+    borderColor: '#E9EBEB',
+  },
+  feedChipActive: {
+    backgroundColor: '#263238',
+    borderColor: '#263238',
+  },
+  feedChipText: {
+    ...FONTS.styles.bodyMedium14,
+    fontSize: 12,
+    color: '#515b60',
+  },
+  feedChipTextActive: {
+    color: '#FFFFFF',
+  },
+  // ── Category filter ────────────────────────────────────────────────────────
   tabsWrapper: {
     maxHeight: 45,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   tabsContainer: {
     paddingHorizontal: 16,
@@ -173,17 +283,38 @@ const styles = StyleSheet.create({
   filterChipText: {
     ...FONTS.styles.bodyMedium14,
     fontSize: 14,
-    // marginBottom: 2,
     color: '#515b60',
   },
   filterChipTextActive: {
     color: '#FFFFFF',
   },
+  // ── Content ────────────────────────────────────────────────────────────────
   scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
   },
-  bottomSpacer: {
-    height: 40, // some extra space at bottom
-  }
+  skeletonContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  emptyContainer: {
+    paddingVertical: 48,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 14,
+    color: COLORS.textBodyText1,
+    textAlign: 'center',
+  },
+  endText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 13,
+    color: COLORS.textBodyText1,
+    textAlign: 'center',
+    marginVertical: 20,
+  },
 });

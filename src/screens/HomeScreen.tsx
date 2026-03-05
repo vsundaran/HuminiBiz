@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
@@ -15,20 +15,139 @@ import { YourMomentsContent } from '../components/home/YourMomentsContent';
 import { ProfileContent } from '../components/home/ProfileContent';
 import { AnimatedScreen, AnimatedPressable, AnimatedView } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { SkeletonLoader } from '../components/common/SkeletonLoader';
+import { useLiveMoments, useUpcomingMoments, useLaterMoments } from '../hooks/useMoments';
+import { momentToCardProps } from '../utils/momentMapper';
+import { Moment } from '../types/moment.types';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
+type FeedType = 'live' | 'upcoming' | 'later';
 
 type HomeRouteParams = {
   Home: { openProfileSetup?: boolean } | undefined;
 };
 
+// ─── Home Tab Content ─────────────────────────────────────────────────────────
+/**
+ * Extracted to avoid calling hooks conditionally inside HomeScreen JSX.
+ * Fetches 3 cards per section from the real API.
+ */
+const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { data: live,     isLoading: loadingLive }     = useLiveMoments({ limit: 3 });
+  const { data: upcoming, isLoading: loadingUpcoming } = useUpcomingMoments({ limit: 3 });
+  const { data: later,    isLoading: loadingLater }    = useLaterMoments({ limit: 3 });
+
+  const renderSectionCards = (
+    moments: Moment[] | undefined,
+    feedType: 'live' | 'upcoming' | 'later',
+    isLoading: boolean
+  ) => {
+    if (isLoading) {
+      return (
+        <>
+          <SkeletonLoader width="100%" height={160} borderRadius={16} style={{ marginBottom: 12 }} />
+          <SkeletonLoader width="100%" height={160} borderRadius={16} style={{ marginBottom: 12 }} />
+        </>
+      );
+    }
+    if (!moments || moments.length === 0) {
+      return (
+        <Text style={styles.emptyText}>No moments right now.</Text>
+      );
+    }
+    return moments.map((m) => (
+      <MomentCard key={m._id} {...momentToCardProps(m, feedType)} />
+    ));
+  };
+
+  return (
+    <>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Subscribe Card */}
+        <SubscribeCard />
+
+        {/* ── Live moments ────────────────────────────────────────────────── */}
+        <View style={styles.sectionContainer}>
+          <AnimatedView animation="slideUp" delay={100}>
+            <Text style={styles.sectionTitle}>Live moments</Text>
+          </AnimatedView>
+
+          {renderSectionCards(live, 'live', loadingLive)}
+
+          {!loadingLive && (live?.length ?? 0) > 0 && (
+            <ViewAllButton
+              label={`View All (${live!.length})`}
+              onPress={() => navigation.navigate('LiveMoments', { feedType: 'live' })}
+            />
+          )}
+        </View>
+
+        {/* ── In Next 2h ──────────────────────────────────────────────────── */}
+        <View style={[styles.sectionContainer, styles.greyBackgroundContainer]}>
+          <AnimatedView animation="slideUp" delay={200}>
+            <Text style={styles.sectionTitle}>In Next 2h</Text>
+          </AnimatedView>
+
+          {renderSectionCards(upcoming, 'upcoming', loadingUpcoming)}
+
+          {!loadingUpcoming && (upcoming?.length ?? 0) > 0 && (
+            <ViewAllButton
+              label={`View All (${upcoming!.length})`}
+              onPress={() => navigation.navigate('LiveMoments', { feedType: 'upcoming' })}
+            />
+          )}
+        </View>
+
+        {/* ── Others (later) ──────────────────────────────────────────────── */}
+        <View style={styles.sectionContainer}>
+          <AnimatedView animation="slideUp" delay={300}>
+            <Text style={styles.sectionTitle}>Others</Text>
+          </AnimatedView>
+
+          {renderSectionCards(later, 'later', loadingLater)}
+
+          {!loadingLater && (later?.length ?? 0) > 0 && (
+            <ViewAllButton
+              label={`View All (${later!.length})`}
+              onPress={() => navigation.navigate('LiveMoments', { feedType: 'later' })}
+            />
+          )}
+        </View>
+
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
+      {/* FAB */}
+      <AnimatedView animation="scale" delay={400} style={styles.fabContainer}>
+        <Shadow
+          distance={5}
+          startColor="rgba(255,255,255,0.5)"
+          offset={[0, 2]}
+          style={styles.fab}
+          containerStyle={styles.fab}
+        >
+          <AnimatedPressable
+            style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
+            onPress={() => navigation.navigate('CreateMoment')}
+          >
+            <PlusIcon size={24} color={COLORS.primary} />
+          </AnimatedPressable>
+        </Shadow>
+      </AnimatedView>
+    </>
+  );
+};
+
+// ─── HomeScreen ───────────────────────────────────────────────────────────────
 export const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Home');
   const [showProfileSetupModal, setShowProfileSetupModal] = useState(false);
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<HomeRouteParams, 'Home'>>();
 
-  // Handle new-user profile setup flow
   useEffect(() => {
     if (route.params?.openProfileSetup) {
       setActiveTab('Profile');
@@ -38,7 +157,6 @@ export const HomeScreen = () => {
   }, []);
 
   const handleTabPress = (tab: Tab) => {
-    // When user manually switches away from Profile, clear the setup modal flag
     if (tab !== 'Profile') {
       setShowProfileSetupModal(false);
     }
@@ -48,7 +166,7 @@ export const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <AnimatedScreen style={styles.container}>
-        {/* Main Background Gradient using SVG */}
+        {/* Background */}
         <View style={StyleSheet.absoluteFill}>
           <Svg height="100%" width="100%">
             <Defs>
@@ -62,7 +180,7 @@ export const HomeScreen = () => {
           </Svg>
         </View>
 
-        {/* Header Section — only shown on the Home tab */}
+        {/* Header — only on Home tab */}
         {activeTab === 'Home' && (
           <AnimatedView animation="slideDown" style={styles.headerSection}>
             <HuminiLogo width={55} height={55} />
@@ -73,119 +191,9 @@ export const HomeScreen = () => {
           </AnimatedView>
         )}
 
-        {/* ── Tab Content ── */}
+        {/* Tab Content */}
         {activeTab === 'Home' ? (
-          <>
-            <ScrollView
-              contentContainerStyle={styles.scrollContent}
-              showsVerticalScrollIndicator={false}>
-
-              {/* Subscribe Card */}
-              <SubscribeCard />
-
-              {/* Live moments section */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Live moments</Text>
-
-                <MomentCard
-                  userName="Gnani Gnanasekaran"
-                  userRole="Frappe Manager"
-                  eventType="Birthday"
-                  eventMessage="Today is my work anniversary! Feel free to call me and share your wishes or celebrate this moment together."
-                  timeStr="Ends in 50m"
-                  buttonType="ShareWishes"
-                  likesCount={100}
-                />
-
-                <MomentCard
-                  userName="Rajashekar Reddy"
-                  userRole="Associate Developer"
-                  eventType="Promotion"
-                  eventMessage="I've been promoted today, feel free to call and celebrate this moment."
-                  timeStr="Ends in 45m"
-                  buttonType="ShareWishes"
-                  likesCount={0}
-                />
-
-                <MomentCard
-                  userName="Tamilselvan G"
-                  userRole="UX/UI Designer"
-                  eventType="Birthday"
-                  eventMessage="It's my birthday today, feel free to call me and share your wishes."
-                  timeStr="Ends in 45m"
-                  buttonType="ShareWishes"
-                  likesCount={0}
-                />
-
-                <ViewAllButton
-                  label="View All (122)"
-                  onPress={() => navigation.navigate('LiveMoments')}
-                />
-              </View>
-
-              {/* In Next 2h section */}
-              <View style={[styles.sectionContainer, styles.greyBackgroundContainer]}>
-                <Text style={styles.sectionTitle}>In Next 2h</Text>
-
-                <MomentCard
-                  userName="Krishanmoorthy"
-                  userRole="Associate Developer"
-                  eventType="Promotion"
-                  eventMessage="I've been promoted today, feel free to call and celebrate this moment."
-                  timeStr="11:00AM - 12:00PM"
-                  buttonType="NotifyMe"
-                  likesCount={0}
-                />
-              </View>
-
-              {/* Others section */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Others</Text>
-
-                <MomentCard
-                  userName="Jeeva Santiago"
-                  userRole="UX Designer"
-                  eventType="NewJoinee"
-                  eventMessage="I've just joined the team, feel free to call and say hello."
-                  dateStr="12/3/26"
-                  timeStr="11:00AM - 12:00PM"
-                  buttonType="NotifyMe"
-                  likesCount={0}
-                />
-
-                <MomentCard
-                  userName="Surya M S"
-                  userRole="Full-stack developer"
-                  eventType="DeadlineStress"
-                  eventMessage="I've just joined the team, feel free to call and say hello."
-                  dateStr="12/3/26"
-                  timeStr="11:00AM - 12:00PM"
-                  buttonType="NotifyMe"
-                  likesCount={0}
-                />
-              </View>
-
-              <View style={styles.bottomSpacer} />
-            </ScrollView>
-
-            {/* FAB for Home tab */}
-            <AnimatedView animation="scale" delay={400} style={styles.fabContainer}>
-              <Shadow
-                distance={5}
-                startColor="rgba(255,255,255,0.5)"
-                offset={[0, 2]}
-                style={styles.fab}
-                containerStyle={styles.fab}
-              >
-                <AnimatedPressable
-                  style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}
-                  onPress={() => navigation.navigate('CreateMoment')}
-                >
-                  <PlusIcon size={24} color={COLORS.primary} />
-                </AnimatedPressable>
-              </Shadow>
-            </AnimatedView>
-          </>
+          <HomeTabContent navigation={navigation} />
         ) : activeTab === 'Your Moments' ? (
           <YourMomentsContent />
         ) : activeTab === 'Profile' ? (
@@ -196,7 +204,7 @@ export const HomeScreen = () => {
           />
         ) : null}
 
-        {/* Shared Tab Bar — always at the bottom */}
+        {/* Shared Tab Bar */}
         <TopTabBar activeTab={activeTab} onTabPress={handleTabPress} />
       </AnimatedScreen>
     </SafeAreaView>
@@ -272,5 +280,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 14,
+    color: COLORS.textBodyText1,
+    marginVertical: 12,
   },
 });

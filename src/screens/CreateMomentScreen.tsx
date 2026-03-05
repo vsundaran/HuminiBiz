@@ -27,6 +27,7 @@ import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/a
 import { Shadow } from 'react-native-shadow-2';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateMoment } from '../hooks/useMoments';
+import { AppAlert } from '../components/common/AppAlert';
 // NOTE: Static SUBCATEGORIES removed — now dynamically fetched from useCategories()
 // Category chip config used only for visual color mapping (not for subcategories)
 // Type alias for backwards compat with remaining CATEGORY_CONFIG references
@@ -143,6 +144,18 @@ export const CreateMomentScreen: React.FC = () => {
   const [startTime, setStartTime] = useState<string>('9:30AM');
   const [endTime, setEndTime] = useState<string>('10:00AM');
 
+  // ── Validation errors ─────────────────────────────────────────────────────
+  const [errors, setErrors] = useState<{
+    category?: string;
+    subcategory?: string;
+    description?: string;
+    time?: string;
+  }>({});
+
+  // ── Alert state ───────────────────────────────────────────────────────────
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
   // ── Modal visibility ────────────────────────────────────────────────────────────
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSubCatModal, setShowSubCatModal] = useState(false);
@@ -178,13 +191,39 @@ export const CreateMomentScreen: React.FC = () => {
     }
   }, []);
 
-  // ── Submit handler ──────────────────────────────────────────────────────────────
-  const handleCreate = useCallback(() => {
-    if (!selectedCategoryId || !selectedSubCategoryId || !description.trim()) {
-      return;
-    }
+  // ── Derived: is every required field valid? ────────────────────────────────────
+  const isFormValid = useMemo(() => {
+    if (!selectedCategoryId) return false;
+    if (!selectedSubCategoryId) return false;
+    if (!description.trim()) return false;
+    if (parseTo24h(endTime) <= parseTo24h(startTime)) return false;
+    return true;
+  }, [selectedCategoryId, selectedSubCategoryId, description, startTime, endTime]);
 
-    // Build ISO date-time strings from selected date + time
+  // ── Validate and collect all field errors ─────────────────────────────────
+  const validate = useCallback((): boolean => {
+    const newErrors: typeof errors = {};
+    if (!selectedCategoryId) {
+      newErrors.category = 'Please select a category.';
+    }
+    if (!selectedSubCategoryId) {
+      newErrors.subcategory = 'Please select a sub-category.';
+    }
+    if (!description.trim()) {
+      newErrors.description = 'Description is required.';
+    }
+    if (parseTo24h(endTime) <= parseTo24h(startTime)) {
+      newErrors.time = 'End time must be after start time.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [selectedCategoryId, selectedSubCategoryId, description, startTime, endTime]);
+
+  // ── Submit handler ────────────────────────────────────────────────────────────
+  const handleCreate = useCallback(() => {
+    if (!validate()) return;
+
+    // Build ISO datetime strings from the selected local date + time slot
     const buildISODateTime = (date: Date, timeStr: string): string => {
       const base = new Date(date);
       const match = timeStr.match(/(\d+):(\d+)(AM|PM)/);
@@ -199,21 +238,28 @@ export const CreateMomentScreen: React.FC = () => {
       return base.toISOString();
     };
 
-    createMoment(
-      {
-        categoryId: selectedCategoryId,
-        subcategoryId: selectedSubCategoryId,
-        description: description.trim(),
-        startDateTime: buildISODateTime(startDate, startTime),
-        endDateTime: buildISODateTime(startDate, endTime),
+    const payload = {
+      categoryId:    selectedCategoryId,
+      subcategoryId: selectedSubCategoryId,
+      description:   description.trim(),
+      startDateTime: buildISODateTime(startDate, startTime),
+      endDateTime:   buildISODateTime(startDate, endTime),
+    };
+
+    createMoment(payload, {
+      onSuccess: () => {
+        navigation.navigate('Home');
       },
-      {
-        onSuccess: () => {
-          navigation.navigate('Home');
-        },
+      onError: (error: any) => {
+        const msg =
+          error?.response?.data?.message ??
+          error?.message ??
+          'Something went wrong. Please try again.';
+        setAlertMessage(msg);
+        setAlertVisible(true);
       },
-    );
-  }, [selectedCategoryId, selectedSubCategoryId, description, startDate, startTime, endTime, createMoment, navigation]);
+    });
+  }, [validate, selectedCategoryId, selectedSubCategoryId, description, startDate, startTime, endTime, createMoment, navigation]);
 
 
   return (
@@ -279,6 +325,7 @@ export const CreateMomentScreen: React.FC = () => {
               })}
             </View>
           </AnimatedView>
+          {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
 
           {/* ── Sub Category ── */}
           <AnimatedView animation="slideUp" delay={150} style={styles.fieldContainer}>
@@ -297,8 +344,7 @@ export const CreateMomentScreen: React.FC = () => {
               <DropdownArrowIcon size={20} color={COLORS.textSubHeadline} />
             </TouchableOpacity>
           </AnimatedView>
-
-          {/* ── Description ── */}
+          {errors.subcategory ? <Text style={styles.errorText}>{errors.subcategory}</Text> : null}
           <AnimatedView animation="slideUp" delay={200} style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Describe about your moment</Text>
             <View style={styles.descriptionContainer}>
@@ -315,6 +361,7 @@ export const CreateMomentScreen: React.FC = () => {
               <Text style={styles.charCounter}>{description.length}/100</Text>
             </View>
           </AnimatedView>
+          {errors.description ? <Text style={styles.errorText}>{errors.description}</Text> : null}
 
           {/* ── Start Date ── */}
           <AnimatedView animation="slideUp" delay={250} style={styles.fieldContainer}>
@@ -364,6 +411,11 @@ export const CreateMomentScreen: React.FC = () => {
             </View>
           </AnimatedView>
 
+          {/* ── Time error ───────────────────────────────────────────── */}
+          {errors.time ? (
+            <Text style={styles.errorText}>{errors.time}</Text>
+          ) : null}
+
           <View style={styles.bottomSpacer} />
         </ScrollView>
 
@@ -377,9 +429,12 @@ export const CreateMomentScreen: React.FC = () => {
             containerStyle={{ width: '100%' }}
           > */}
             <AnimatedPressable
-              style={[styles.createButton, isSubmitting && { opacity: 0.7 }]}
+              style={[
+                styles.createButton,
+                (!isFormValid || isSubmitting) && styles.createButtonDisabled,
+              ]}
               onPress={handleCreate}
-              disabled={isSubmitting}
+              disabled={!isFormValid || isSubmitting}
             >
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
@@ -467,6 +522,15 @@ export const CreateMomentScreen: React.FC = () => {
         }}
         onClose={() => setShowEndTimeModal(false)}
         title="Select End Time"
+      />
+
+      {/* ── API Error Alert ── */}
+      <AppAlert
+        visible={alertVisible}
+        onClose={() => setAlertVisible(false)}
+        type="error"
+        title="Couldn’t create moment"
+        message={alertMessage}
       />
     </SafeAreaView>
   );
@@ -757,5 +821,16 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: COLORS.white,
     marginHorizontal: 0,
+  },
+  // ── Validation ──
+  errorText: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 12,
+    color: COLORS.error,
+    marginTop: -8,
+  },
+  createButtonDisabled: {
+    opacity: 0.5,
   },
 });

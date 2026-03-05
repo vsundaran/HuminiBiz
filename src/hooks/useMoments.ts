@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import {
   getLiveMoments,
   getUpcomingMoments,
@@ -14,10 +14,15 @@ import { CreateMomentPayload } from '../types/moment.types';
 export const momentKeys = {
   all: ['moments'] as const,
   live: (categoryId?: string) => ['moments', 'live', categoryId] as const,
+  liveInfinite: (categoryId?: string) => ['moments', 'live', 'infinite', categoryId] as const,
   upcoming: (categoryId?: string) => ['moments', 'upcoming', categoryId] as const,
+  upcomingInfinite: (categoryId?: string) => ['moments', 'upcoming', 'infinite', categoryId] as const,
   later: (categoryId?: string) => ['moments', 'later', categoryId] as const,
+  laterInfinite: (categoryId?: string) => ['moments', 'later', 'infinite', categoryId] as const,
   my: () => ['moments', 'my'] as const,
 };
+
+const PAGE_SIZE = 10;
 
 // ─── Live Moments ─────────────────────────────────────────────────────────────
 export const useLiveMoments = (params?: { limit?: number; categoryId?: string }) => {
@@ -95,5 +100,57 @@ export const useToggleLike = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: momentKeys.all });
     },
+  });
+};
+
+// ─── Infinite Live Moments (for LiveMomentsScreen) ────────────────────────────
+export const useInfiniteLiveMoments = (categoryId?: string) => {
+  return useInfiniteQuery({
+    queryKey: momentKeys.liveInfinite(categoryId),
+    queryFn: ({ pageParam = 0 }) =>
+      getLiveMoments(undefined, categoryId).then((all) =>
+        all.slice(pageParam, pageParam + PAGE_SIZE)
+      ),
+    getNextPageParam: (lastPage, allPages) => {
+      const fetched = allPages.flat().length;
+      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 60,
+    initialPageParam: 0,
+  });
+};
+
+// ─── Infinite Upcoming Moments (for LiveMomentsScreen) ────────────────────────
+export const useInfiniteUpcomingMoments = (categoryId?: string) => {
+  return useInfiniteQuery({
+    queryKey: momentKeys.upcomingInfinite(categoryId),
+    queryFn: ({ pageParam = 0 }) =>
+      getUpcomingMoments(undefined, categoryId).then((all) =>
+        all.slice(pageParam, pageParam + PAGE_SIZE)
+      ),
+    getNextPageParam: (lastPage, allPages) => {
+      const fetched = allPages.flat().length;
+      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+    },
+    staleTime: 1000 * 60 * 2,
+    initialPageParam: 0,
+  });
+};
+
+// ─── Infinite Later Moments (for LiveMomentsScreen) ───────────────────────────
+export const useInfiniteLaterMoments = (categoryId?: string) => {
+  return useInfiniteQuery({
+    queryKey: momentKeys.laterInfinite(categoryId),
+    queryFn: ({ pageParam = 0 }) =>
+      getLaterMoments(undefined, categoryId).then((all) =>
+        all.slice(pageParam, pageParam + PAGE_SIZE)
+      ),
+    getNextPageParam: (lastPage, allPages) => {
+      const fetched = allPages.flat().length;
+      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+    },
+    staleTime: 1000 * 60 * 5,
+    initialPageParam: 0,
   });
 };
