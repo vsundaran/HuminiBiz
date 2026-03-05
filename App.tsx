@@ -18,7 +18,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 
-import { LiveMomentsScreen } from './src/screens/LiveMomentsScreen';
+import { ListMomentsScreen } from './src/screens/ListMomentsScreen';
 import { RingingScreen } from './src/screens/RingingScreen';
 import { VideoCallScreen } from './src/screens/VideoCallScreen';
 import { CallCompletedScreen } from './src/screens/CallCompletedScreen';
@@ -87,7 +87,7 @@ function App(): React.JSX.Element {
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Otp" component={OtpScreen} />
                 <Stack.Screen name="Home" component={HomeScreen} />
-                <Stack.Screen name="LiveMoments" component={LiveMomentsScreen} />
+                <Stack.Screen name="ListMoments" component={ListMomentsScreen} />
                 <Stack.Screen name="Ringing" component={RingingScreen} />
                 <Stack.Screen name="VideoCall" component={VideoCallScreen} />
                 <Stack.Screen name="CallCompleted" component={CallCompletedScreen} />

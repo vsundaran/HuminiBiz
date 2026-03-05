@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,47 +19,42 @@ import {
   useInfiniteUpcomingMoments,
   useInfiniteLaterMoments,
 } from '../hooks/useMoments';
+import { useCategories } from '../hooks/useCategories';
 import { momentToCardProps } from '../utils/momentMapper';
 import { Moment } from '../types/moment.types';
 import { SkeletonLoader } from '../components/common/SkeletonLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type FeedType = 'live' | 'upcoming' | 'later';
-type FilterTab = 'All' | 'Wishes' | 'Motivation' | 'Celebration';
 
 type RootStackParamList = {
-  LiveMoments: { feedType?: FeedType } | undefined;
+  ListMoments: { feedType?: FeedType } | undefined;
 };
-
-// ─── Header and skeleton constants ────────────────────────────────────────────
-const FILTER_TABS: FilterTab[] = ['All', 'Wishes', 'Motivation', 'Celebration'];
-
-// const SECTION_LABELS: Record<FeedType, string> = {
-//   live:     'Live moments',
-//   upcoming: 'In Next 2h',
-//   later:    'Others',
-// };
 
 // ─── Helper: flatten pages from infinite query result ─────────────────────────
 const flatPages = (data: any): Moment[] =>
   data?.pages?.flatMap((p: Moment[]) => p) ?? [];
 
 // ─── LiveMomentsScreen ────────────────────────────────────────────────────────
-export const LiveMomentsScreen = () => {
+export const ListMomentsScreen = () => {
   const navigation = useNavigation();
-  // const route = useRoute<RouteProp<RootStackParamList, 'LiveMoments'>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'ListMoments'>>();
 
-  // Honour the feedType param — default to 'live'
-  // const initialFeed: FeedType = route.params?.feedType ?? 'live';
+  const activeFeed = route.params?.feedType || 'live';
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('all');
 
-  // const [activeFeed, setActiveFeed]       = useState<FeedType>(initialFeed);
-  const activeFeed = 'live'
-  const [activeFilter, setActiveFilter]   = useState<FilterTab>('All');
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+
+  const filterTabs = useMemo(() => {
+    return [{ _id: 'all', name: 'All' }, ...categories];
+  }, [categories]);
+
+  const filterId = activeCategoryId === 'all' ? undefined : activeCategoryId;
 
   // ── Infinite queries for each feed type ───────────────────────────────────
-  const liveQuery     = useInfiniteLiveMoments();
-  const upcomingQuery = useInfiniteUpcomingMoments();
-  const laterQuery    = useInfiniteLaterMoments();
+  const liveQuery     = useInfiniteLiveMoments(filterId);
+  const upcomingQuery = useInfiniteUpcomingMoments(filterId);
+  const laterQuery    = useInfiniteLaterMoments(filterId);
 
   const queryMap: Record<FeedType, typeof liveQuery> = {
     live:     liveQuery,
@@ -136,7 +130,9 @@ export const LiveMomentsScreen = () => {
               <ArrowRightThinIcon size={14} color="#000" />
             </View>
           </AnimatedPressable>
-          <Text style={styles.title}>Live moments</Text>
+          <Text style={styles.title}>
+            {activeFeed === 'upcoming' ? 'In Next 2h' : activeFeed === 'later' ? 'Others' : 'Live moments'}
+          </Text>
         </AnimatedView>
 
         {/* Feed type selector (Live / In Next 2h / Others) */}
@@ -157,24 +153,30 @@ export const LiveMomentsScreen = () => {
 
         {/* Category filter chips */}
         <AnimatedView animation="slideDown" delay={100}>
-          <FlatList
-            data={FILTER_TABS}
-            horizontal
-            keyExtractor={(t) => t}
-            showsHorizontalScrollIndicator={false}
-            style={styles.tabsWrapper}
-            contentContainerStyle={styles.tabsContainer}
-            renderItem={({ item: tab }) => (
-              <AnimatedPressable
-                style={[styles.filterChip, activeFilter === tab && styles.filterChipActive]}
-                onPress={() => setActiveFilter(tab)}
-              >
-                <Text style={[styles.filterChipText, activeFilter === tab && styles.filterChipTextActive]}>
-                  {tab}
-                </Text>
-              </AnimatedPressable>
-            )}
-          />
+          {categoriesLoading ? (
+            <View style={[styles.tabsWrapper, { justifyContent: 'center', paddingHorizontal: 16 }]}>
+               <ActivityIndicator size="small" color={COLORS.primary} />
+            </View>
+          ) : (
+            <FlatList
+              data={filterTabs}
+              horizontal
+              keyExtractor={(t) => t._id}
+              showsHorizontalScrollIndicator={false}
+              style={styles.tabsWrapper}
+              contentContainerStyle={styles.tabsContainer}
+              renderItem={({ item: tab }) => (
+                <AnimatedPressable
+                  style={[styles.filterChip, activeCategoryId === tab._id && styles.filterChipActive]}
+                  onPress={() => setActiveCategoryId(tab._id)}
+                >
+                  <Text style={[styles.filterChipText, activeCategoryId === tab._id && styles.filterChipTextActive]}>
+                    {tab.name}
+                  </Text>
+                </AnimatedPressable>
+              )}
+            />
+          )}
         </AnimatedView>
 
         {/* Content List — Infinite Scroll */}
@@ -190,10 +192,12 @@ export const LiveMomentsScreen = () => {
             onEndReached={loadMore}
             onEndReachedThreshold={0.4}
             ListHeaderComponent={
-            <AnimatedView animation="slideDown" delay={200}>
-              <LiveMomentsBanner />
-            </AnimatedView>
-          }
+              activeFeed === 'live' ? (
+                <AnimatedView animation="slideDown" delay={200}>
+                  <LiveMomentsBanner count={allMoments.length} />
+                </AnimatedView>
+              ) : null
+            }
             ListFooterComponent={renderFooter}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>

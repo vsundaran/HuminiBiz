@@ -10,7 +10,11 @@ import { LiveMomentsFace6Icon } from '../../assets/icons/LiveMomentsFace6Icon';
 import { LiveMomentsFace7Icon } from '../../assets/icons/LiveMomentsFace7Icon';
 import { LiveMomentsGlowIcon } from '../../assets/icons/LiveMomentsGlowIcon';
 
-export const LiveMomentsBanner: React.FC = () => {
+interface LiveMomentsBannerProps {
+  count: number;
+}
+
+export const LiveMomentsBanner: React.FC<LiveMomentsBannerProps> = ({ count }) => {
   return (
     <View style={styles.container}>
       {/* Background Gradient */}
@@ -57,7 +61,7 @@ export const LiveMomentsBanner: React.FC = () => {
         </View>
       </View>
       
-      <Text style={styles.countText}>122</Text>
+      <Text style={styles.countText}>{count}</Text>
       <Text style={styles.subtitleText}>Live moments</Text>
       
       <TouchableOpacity style={styles.meetButton}>

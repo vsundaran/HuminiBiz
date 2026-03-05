@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
@@ -21,8 +21,6 @@ import { momentToCardProps } from '../utils/momentMapper';
 import { Moment } from '../types/moment.types';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
-type FeedType = 'live' | 'upcoming' | 'later';
-
 type HomeRouteParams = {
   Home: { openProfileSetup?: boolean } | undefined;
 };
@@ -83,7 +81,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
             {!loadingLive && (live?.length ?? 0) > 0 && (
               <ViewAllButton
                 label={`View All (${live!.length})`}
-                onPress={() => navigation.navigate('LiveMoments', { feedType: 'live' })}
+                onPress={() => navigation.navigate('ListMoments', { feedType: 'live' })}
             />
           )}
           </AnimatedView>
@@ -101,7 +99,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
             {!loadingUpcoming && (upcoming?.length ?? 0) > 0 && (
               <ViewAllButton
                 label={`View All (${upcoming!.length})`}
-                onPress={() => navigation.navigate('LiveMoments', { feedType: 'upcoming' })}
+                onPress={() => navigation.navigate('ListMoments', { feedType: 'upcoming' })}
             />
 
           )}
@@ -120,7 +118,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
           {!loadingLater && (later?.length ?? 0) > 0 && (
             <ViewAllButton
               label={`View All (${later!.length})`}
-              onPress={() => navigation.navigate('LiveMoments', { feedType: 'later' })}
+              onPress={() => navigation.navigate('ListMoments', { feedType: 'later' })}
             />
           )}
           </AnimatedView>
