@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  RefreshControl,
   Switch,
 } from 'react-native';
 import Svg, { Path, Defs, RadialGradient, LinearGradient, Stop, Circle, Rect } from 'react-native-svg';
@@ -13,6 +13,10 @@ import { COLORS, FONTS } from '../../theme';
 import { PlusIcon } from '../icons/PlusIcon';
 import { AnimatedView, AnimatedPressable, AnimatedCard, AnimatedListItem } from '../../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { useMyMoments, useToggleMomentStatus } from '../../hooks/useMoments';
+import { mapMyMoment } from '../../mappers/moment.mapper';
+import { SkeletonLoader } from '../common/SkeletonLoader';
+import { EmptyState } from '../common/EmptyState';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -298,23 +302,26 @@ const ARCHIVED_MOMENTS: MomentCardData[] = [
  */
 export const YourMomentsContent: React.FC = () => {
   const [activeInnerTab, setActiveInnerTab] = useState<InnerTab>('Custom');
-  const [moments, setMoments] = useState(INITIAL_MOMENTS);
-  const [enabledMap, setEnabledMap] = useState<Record<string, boolean>>({
-    '1': false,
-    '2': false,
-  });
 
-  const handleToggle = useCallback((id: string) => {
-    setEnabledMap(prev => ({ ...prev, [id]: !prev[id] }));
-  }, []);
+  // ── Real API data ─────────────────────────────────────────────────────
+  const { data: myMomentsData, isLoading, refetch } = useMyMoments();
+  const { mutate: toggleStatus } = useToggleMomentStatus();
+
+  const activeMoments = (myMomentsData?.activeMoments ?? []).map(mapMyMoment);
+  const expiredMoments = (myMomentsData?.expiredMoments ?? []).map(mapMyMoment);
+
+  const handleToggle = useCallback((id: string, currentActive: boolean) => {
+    toggleStatus({ momentId: id, active: !currentActive });
+  }, [toggleStatus]);
 
   const handleArchive = useCallback((id: string) => {
-    setMoments(prev => prev.filter(m => m.id !== id));
-  }, []);
+    // Archive = set active = false
+    toggleStatus({ momentId: id, active: false });
+  }, [toggleStatus]);
 
   // Active tab pill color: dark for Subscribe, blue for Custom/Archive (Figma spec)
   const getActiveTabStyle = (tab: InnerTab) => {
-    if (tab !== activeInnerTab) return null;
+    if (tab !== activeInnerTab) { return null; }
     return tab === 'Subscribe' ? styles.innerTabActiveSubscribe : styles.innerTabActive;
   };
 
@@ -367,37 +374,77 @@ export const YourMomentsContent: React.FC = () => {
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          {activeInnerTab === 'Custom' ? (
-            moments.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No moments yet</Text>
-              </View>
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isLoading} onRefresh={refetch} tintColor={COLORS.primary} />
+          }
+        >
+          {isLoading ? (
+            <>
+              <SkeletonLoader width="100%" height={140} borderRadius={16} />
+              <SkeletonLoader width="100%" height={140} borderRadius={16} />
+            </>
+          ) : activeInnerTab === 'Custom' ? (
+            activeMoments.length === 0 ? (
+              <EmptyState message="No active moments" subMessage="Create a moment to get started" />
             ) : (
-              moments.map((moment, index) => (
-                <AnimatedListItem key={moment.id} index={index}>
-                  <MomentCard
-                    data={moment}
-                    enabled={enabledMap[moment.id] ?? false}
-                    onToggle={handleToggle}
-                    onArchive={handleArchive}
-                  />
-                </AnimatedListItem>
-              ))
+              activeMoments.map((moment, index) => {
+                // Build MomentCardData from mapped moment
+                const isWishes = moment.categoryName.toLowerCase().includes('wish');
+                const cardData: MomentCardData = {
+                  id: moment.id,
+                  category: isWishes ? 'Wishes' : 'Motivation',
+                  categoryLabel: moment.categoryName,
+                  subLabel: moment.subcategoryName,
+                  status: moment.active ? 'Active' : 'Scheduled',
+                  message: moment.description,
+                  timeStr: moment.timeStr,
+                  dateStr: moment.dateStr,
+                  timeRange: undefined,
+                  headerBg: isWishes ? '#F3FDEC' : '#FFF3EF',
+                  titleColor: isWishes ? '#486333' : '#804343',
+                  subColor: isWishes ? 'rgba(72,99,51,0.9)' : 'rgba(128,67,67,0.9)',
+                };
+                return (
+                  <AnimatedListItem key={moment.id} index={index}>
+                    <MomentCard
+                      data={cardData}
+                      enabled={moment.active}
+                      onToggle={(id) => handleToggle(id, moment.active)}
+                      onArchive={handleArchive}
+                    />
+                  </AnimatedListItem>
+                );
+              })
             )
           ) : (
-            /* Archive tab — empty for now */
-           ARCHIVED_MOMENTS.length === 0 ? (
-                        <View style={styles.emptyState}>
-                          <Text style={styles.emptyText}>No archived moments</Text>
-                        </View>
-                      ) : (
-                        ARCHIVED_MOMENTS.map((moment, index) => (
-                          <AnimatedListItem key={moment.id} index={index}>
-                            <ArchiveMomentCard data={moment} />
-                          </AnimatedListItem>
-                        ))
-                      )
+            /* Archive tab */
+            expiredMoments.length === 0 ? (
+              <EmptyState message="No archived moments" />
+            ) : (
+              expiredMoments.map((moment, index) => {
+                const isWishes = moment.categoryName.toLowerCase().includes('wish');
+                const cardData: MomentCardData = {
+                  id: moment.id,
+                  category: isWishes ? 'Wishes' : 'Motivation',
+                  categoryLabel: moment.categoryName,
+                  subLabel: moment.subcategoryName,
+                  status: 'Scheduled',
+                  message: moment.description,
+                  timeStr: moment.timeStr,
+                  dateStr: moment.dateStr,
+                  timeRange: undefined,
+                  headerBg: isWishes ? '#F3FDEC' : '#FFF3EF',
+                  titleColor: isWishes ? '#486333' : '#804343',
+                  subColor: isWishes ? 'rgba(72,99,51,0.9)' : 'rgba(128,67,67,0.9)',
+                };
+                return (
+                  <AnimatedListItem key={moment.id} index={index}>
+                    <ArchiveMomentCard data={cardData} />
+                  </AnimatedListItem>
+                );
+              })
+            )
           )}
           <View style={styles.bottomSpacer} />
         </ScrollView>

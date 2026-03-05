@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
 import { EventChip, EventType } from '../chips/EventChip';
 import { ClockIcon } from '../icons/ClockIcon';
@@ -12,6 +12,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AnimatedCard, AnimatedPressable, AnimatedView } from '../animated';
 import { Shadow } from 'react-native-shadow-2';
+import { InitialsAvatar } from '../common/InitialsAvatar';
+import { useToggleLike } from '../../hooks/useMoments';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -21,32 +23,51 @@ export type RootStackParamList = {
 };
 
 export type MomentCardProps = {
+  momentId?: string;          // Used for like mutation
   userName: string;
   userRole: string;
-  profileImageUrl?: string;
-  flagUrl?: string; // Optional right now
   eventType: EventType;
   eventMessage: string;
   dateStr?: string;
   timeStr?: string;
   buttonType: 'NotifyMe' | 'ShareWishes';
   likesCount: number;
+  isLikedByMe?: boolean;
   isInCall?: boolean;
 };
 
+
 export const MomentCard: React.FC<MomentCardProps> = ({
+  momentId,
   userName,
   userRole,
-  profileImageUrl,
   eventType,
   eventMessage,
   dateStr,
   timeStr,
   buttonType,
   likesCount,
+  isLikedByMe = false,
   isInCall,
 }) => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [localLiked, setLocalLiked] = useState(isLikedByMe);
+  const [localCount, setLocalCount] = useState(likesCount);
+  const { mutate: toggleLikeMutate } = useToggleLike();
+
+  const handleLike = () => {
+    if (!momentId) { return; }
+    const wasLiked = localLiked;
+    setLocalLiked(!wasLiked);
+    setLocalCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
+    toggleLikeMutate(momentId, {
+      onError: () => {
+        setLocalLiked(wasLiked);
+        setLocalCount(likesCount);
+      },
+    });
+  };
+
   return (
     <AnimatedCard style={{ marginBottom: 16, width: '100%' }}>
       <Shadow
@@ -58,11 +79,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
       >
         {/* Header section */}
         <View style={styles.headerRow}>
-          <Image 
-            // source={{ uri: profileImageUrl || `https://ui-avatars.com/api/?name=${userName.replace(' ', '+')}&background=EAEAEA&color=263238` }} 
-            source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
-            style={styles.avatar} 
-          />
+          <InitialsAvatar name={userName} size={53} style={styles.avatar} />
           <View style={styles.headerTextContainer}>
             <Text style={styles.userName}>{userName}</Text>
             <Text style={styles.userRole}>{userRole}</Text>
@@ -70,6 +87,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
         </View>
 
       <View style={styles.divider} />
+
 
       {/* Content section */}
       <View style={styles.contentSection}>
@@ -144,14 +162,14 @@ export const MomentCard: React.FC<MomentCardProps> = ({
           </AnimatedPressable>
         {/* </Shadow> */}
         
-        <AnimatedPressable style={styles.likeButtonContainer}>
-          {likesCount > 0 ? (
+        <AnimatedPressable style={styles.likeButtonContainer} onPress={handleLike}>
+          {localLiked ? (
             <HeartFillIcon size={28} />
           ) : (
             <HeartOutlineIcon size={28} color={COLORS.textSubHeadline} fill="white" />
           )}
-          <Text style={[styles.likeCountText, likesCount > 0 && { color: '#8b7200' }]}>
-            {likesCount}
+          <Text style={[styles.likeCountText, localCount > 0 && { color: '#8b7200' }]}>
+            {localCount}
           </Text>
         </AnimatedPressable>
       </View>

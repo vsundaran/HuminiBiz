@@ -1,30 +1,57 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HuminiLogo } from '../assets/icons/HuminiLogo';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { useRequestOtp } from '../hooks/useAuth';
 
 const { width } = Dimensions.get('window');
 
 type RootStackParamList = {
-  Login: undefined;
+  Login: { email?: string } | undefined;
   Home: undefined;
   Otp: { email: string };
 };
 
 export const LoginScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [email, setEmail] = useState('');
+  const route = useRoute<RouteProp<RootStackParamList, 'Login'>>();
+
+  const [email, setEmail] = useState(route.params?.email || '');
+
+  useEffect(() => {
+    if (route.params?.email) {
+      setEmail(route.params.email);
+    }
+  }, [route.params?.email]);
+
+  const { mutate: requestOtp, isPending } = useRequestOtp();
 
   const handleGetOTP = () => {
-    navigation.navigate('Otp', { email });
+    if (!email.trim()) return;
+
+    requestOtp(
+      { email: email.trim() },
+      {
+        onSuccess: () => {
+          navigation.navigate('Otp', { email: email.trim() });
+        },
+        onError: (error: any) => {
+          Alert.alert(
+            'Error',
+            error.response?.data?.message || 'Failed to request OTP. Please try again.'
+          );
+        },
+      }
+    );
   };
 
   const isEmailEmpty = email.trim() === '';
+  const isSubmitDisabled = isEmailEmpty || isPending;
 
   return (
     <AnimatedScreen style={styles.container}>
@@ -74,16 +101,22 @@ export const LoginScreen = () => {
           {/* Submit Button */}
           <AnimatedView animation="slideUp" delay={300} style={{ width: '100%' }}>
             <AnimatedPressable 
-              style={[styles.button, isEmailEmpty && styles.buttonDisabled]} 
+              style={[styles.button, isSubmitDisabled && styles.buttonDisabled]} 
               onPress={handleGetOTP}
-              disabled={isEmailEmpty}
+              disabled={isSubmitDisabled}
             >
-              <RNText style={[styles.buttonText, isEmailEmpty && styles.buttonTextDisabled]}>
-                Get OTP
-              </RNText>
-              <View style={styles.buttonIcon}>
-                <ArrowRightIcon size={20} color={isEmailEmpty ? '#9B9B9B' : '#FFFFFF'} />
-              </View>
+              {isPending ? (
+                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+              ) : (
+                <>
+                  <RNText style={[styles.buttonText, isEmailEmpty && styles.buttonTextDisabled]}>
+                    Get OTP
+                  </RNText>
+                  <View style={styles.buttonIcon}>
+                    <ArrowRightIcon size={20} color={isEmailEmpty ? '#9B9B9B' : '#FFFFFF'} />
+                  </View>
+                </>
+              )}
             </AnimatedPressable>
           </AnimatedView>
         </View>

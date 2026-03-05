@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,38 +25,14 @@ import { ClockIcon } from '../components/icons/ClockIcon';
 import { DropdownArrowIcon } from '../components/icons/DropdownArrowIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { useCategories } from '../hooks/useCategories';
+import { useCreateMoment } from '../hooks/useMoments';
+// NOTE: Static SUBCATEGORIES removed — now dynamically fetched from useCategories()
+// Category chip config used only for visual color mapping (not for subcategories)
+// Type alias for backwards compat with remaining CATEGORY_CONFIG references
+type Category = string;
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-type Category = 'Wishes' | 'Celebration' | 'Motivation' | 'Others';
 
-// ─── Sub-category data per category ──────────────────────────────────────────
-const SUBCATEGORIES: Record<Category, string[]> = {
-  Wishes: [
-    'Birthday',
-    'Work anniversary',
-    'Marriage anniversary',
-    'New Joinee',
-    'Last day of work / farewell',
-  ],
-  Celebration: [
-    'Promotion',
-    'Achievement',
-    'Work anniversary',
-    'Marriage anniversary',
-    'New Joinee',
-  ],
-  Motivation: [
-    'Deadline stress',
-    'Personal struggle',
-    'Career guidance',
-    'Encouragement',
-  ],
-  Others: [
-    'General moment',
-    'Surprise moment',
-    'Custom event',
-  ],
-};
 
 // ─── Time slots (every 30m, 6AM–11:30PM) ─────────────────────────────────────
 function buildTimeSlots(): string[] {
@@ -145,27 +122,54 @@ function formatDate(date: Date): string {
 export const CreateMomentScreen: React.FC = () => {
   const navigation = useNavigation<any>();
 
-  // Form state
-  const [selectedCategory, setSelectedCategory] = useState<Category>('Wishes');
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
+  // ── API hooks ────────────────────────────────────────────────────────────
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { mutate: createMoment, isPending: isSubmitting } = useCreateMoment();
+
+  // Build category chip config dynamically from API data
+  const CHIP_VISUAL: Record<string, { bg: string; selectedBorder: string; textColor: string }> = {
+    Wishes: { bg: '#E3F2D9', selectedBorder: '#486333', textColor: '#486333' },
+    Celebration: { bg: '#FCECFF', selectedBorder: '#5D4D60', textColor: '#5D4D60' },
+    Motivation: { bg: '#FFEAEA', selectedBorder: '#705B5B', textColor: '#705B5B' },
+    Others: { bg: '#F3F3F3', selectedBorder: '#515B60', textColor: '#515B60' },
+  };
+  const DEFAULT_CHIP = { bg: '#EFF3FF', selectedBorder: '#3A5CC7', textColor: '#3A5CC7' };
+
+  // ── Form state ────────────────────────────────────────────────────────────
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [startTime, setStartTime] = useState<string>('9:30AM');
   const [endTime, setEndTime] = useState<string>('10:00AM');
 
-  // Modal visibility
+  // ── Modal visibility ────────────────────────────────────────────────────────────
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSubCatModal, setShowSubCatModal] = useState(false);
   const [showStartTimeModal, setShowStartTimeModal] = useState(false);
   const [showEndTimeModal, setShowEndTimeModal] = useState(false);
 
-
-
   const duration = useMemo(() => calcDuration(startTime, endTime), [startTime, endTime]);
 
-  const handleCategoryChange = useCallback((cat: Category) => {
-    setSelectedCategory(cat);
-    setSelectedSubCategory(''); // reset sub-cat on category change
+  // ── Derived selections from API categories ───────────────────────────────────────────
+  const selectedCategoryObj = useMemo(
+    () => categories.find(c => c._id === selectedCategoryId),
+    [categories, selectedCategoryId],
+  );
+
+  const subCategories = useMemo(
+    () => selectedCategoryObj?.subcategories ?? [],
+    [selectedCategoryObj],
+  );
+
+  const selectedSubCategoryName = useMemo(
+    () => subCategories.find(s => s._id === selectedSubCategoryId)?.name ?? '',
+    [subCategories, selectedSubCategoryId],
+  );
+
+  const handleCategoryChange = useCallback((catId: string) => {
+    setSelectedCategoryId(catId);
+    setSelectedSubCategoryId(''); // reset sub-cat on category change
   }, []);
 
   const handleDescriptionChange = useCallback((text: string) => {
@@ -174,10 +178,43 @@ export const CreateMomentScreen: React.FC = () => {
     }
   }, []);
 
-  const subCategories = useMemo(
-    () => SUBCATEGORIES[selectedCategory],
-    [selectedCategory],
-  );
+  // ── Submit handler ──────────────────────────────────────────────────────────────
+  const handleCreate = useCallback(() => {
+    if (!selectedCategoryId || !selectedSubCategoryId || !description.trim()) {
+      return;
+    }
+
+    // Build ISO date-time strings from selected date + time
+    const buildISODateTime = (date: Date, timeStr: string): string => {
+      const base = new Date(date);
+      const match = timeStr.match(/(\d+):(\d+)(AM|PM)/);
+      if (match) {
+        let h = parseInt(match[1], 10);
+        const min = parseInt(match[2], 10);
+        const period = match[3];
+        if (period === 'AM' && h === 12) { h = 0; }
+        if (period === 'PM' && h !== 12) { h += 12; }
+        base.setHours(h, min, 0, 0);
+      }
+      return base.toISOString();
+    };
+
+    createMoment(
+      {
+        categoryId: selectedCategoryId,
+        subcategoryId: selectedSubCategoryId,
+        description: description.trim(),
+        startDateTime: buildISODateTime(startDate, startTime),
+        endDateTime: buildISODateTime(startDate, endTime),
+      },
+      {
+        onSuccess: () => {
+          navigation.navigate('Home');
+        },
+      },
+    );
+  }, [selectedCategoryId, selectedSubCategoryId, description, startDate, startTime, endTime, createMoment, navigation]);
+
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -219,22 +256,23 @@ export const CreateMomentScreen: React.FC = () => {
           <AnimatedView animation="slideUp" delay={100} style={styles.section}>
             <Text style={styles.sectionLabel}>Select Category</Text>
             <View style={styles.categoriesGrid}>
-              {CATEGORY_CONFIG.map((cat) => {
-                const isSelected = selectedCategory === cat.key;
+              {categories.map((cat) => {
+                const isSelected = selectedCategoryId === cat._id;
+                const visual = CHIP_VISUAL[cat.name] ?? DEFAULT_CHIP;
                 return (
                   <TouchableOpacity
-                    key={cat.key}
+                    key={cat._id}
                     style={[
                       styles.categoryChip,
-                      { backgroundColor: cat.bg },
+                      { backgroundColor: visual.bg },
                       isSelected
-                        ? { borderColor: cat.selectedBorder, borderWidth: 1.5 }
+                        ? { borderColor: visual.selectedBorder, borderWidth: 1.5 }
                         : { borderColor: COLORS.white, borderWidth: 1 },
                     ]}
-                    onPress={() => handleCategoryChange(cat.key)}
+                    onPress={() => handleCategoryChange(cat._id)}
                     activeOpacity={0.8}>
-                    <Text style={[styles.categoryChipText, { color: cat.textColor }]}>
-                      {cat.label}
+                    <Text style={[styles.categoryChipText, { color: visual.textColor }]}>
+                      {cat.name}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -252,9 +290,9 @@ export const CreateMomentScreen: React.FC = () => {
               <Text
                 style={[
                   styles.inputText,
-                  !selectedSubCategory && styles.placeholderText,
+                  !selectedSubCategoryId && styles.placeholderText,
                 ]}>
-                {selectedSubCategory || 'Select sub category'}
+                {selectedSubCategoryName || 'Select sub category'}
               </Text>
               <DropdownArrowIcon size={20} color={COLORS.textSubHeadline} />
             </TouchableOpacity>
@@ -338,11 +376,16 @@ export const CreateMomentScreen: React.FC = () => {
             style={{ width: '100%', borderRadius: 10 }}
             containerStyle={{ width: '100%' }}
           > */}
-            <AnimatedPressable 
-              style={styles.createButton} 
-              onPress={() => navigation.goBack()}
+            <AnimatedPressable
+              style={[styles.createButton, isSubmitting && { opacity: 0.7 }]}
+              onPress={handleCreate}
+              disabled={isSubmitting}
             >
-              <Text style={styles.createButtonText}>Create Moment</Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.createButtonText}>Create Moment</Text>
+              )}
             </AnimatedPressable>
           {/* </Shadow> */}
         </AnimatedView>
@@ -375,23 +418,23 @@ export const CreateMomentScreen: React.FC = () => {
               <Text style={styles.bottomSheetTitle}>Select sub category</Text>
               <FlatList
                 data={subCategories}
-                keyExtractor={(item) => item}
+                keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                   <TouchableOpacity
                     style={[
                       styles.listItem,
-                      item === selectedSubCategory && styles.listItemSelected,
+                      item._id === selectedSubCategoryId && styles.listItemSelected,
                     ]}
                     onPress={() => {
-                      setSelectedSubCategory(item);
+                      setSelectedSubCategoryId(item._id);
                       setShowSubCatModal(false);
                     }}>
                     <Text
                       style={[
                         styles.listItemText,
-                        item === selectedSubCategory && styles.listItemTextSelected,
+                        item._id === selectedSubCategoryId && styles.listItemTextSelected,
                       ]}>
-                      {item}
+                      {item.name}
                     </Text>
                   </TouchableOpacity>
                 )}

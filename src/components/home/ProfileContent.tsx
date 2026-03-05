@@ -1,57 +1,47 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
 import { HuminiMarkIcon } from '../icons/HuminiMarkIcon';
 import { AnimatedView, AnimatedPressable } from '../../components/animated';
 import { Shadow } from 'react-native-shadow-2';
-
-// ─── Figma Asset URLs (served by Figma Dev MCP localhost server) ──────────────
-// Profile avatar
-const avatarUrl =
-  'http://localhost:3845/assets/0b86ecc1e1b90e5feb6cb643d33d623e7234522a.png';
-
-// Top-3 leaderboard user photos
-const johnPhoto =
-  'http://localhost:3845/assets/20b72e145bb4c728a65fd512e641a4a342268287.png';
-const priyaPhoto =
-  'http://localhost:3845/assets/b86b2440b1f72ece516e354796e6b247f074f191.png';
-const rahulPhoto =
-  'http://localhost:3845/assets/b8a1d8888947ab33f27298d7905cfc41511e1d06.png';
+import { InitialsAvatar } from '../common/InitialsAvatar';
+import { useUserProfile, useUserStats, useLeaderboard } from '../../hooks/useUserProfile';
+import { useAuthStore } from '../../store/auth.store';
+import { SkeletonLoader } from '../common/SkeletonLoader';
 
 // ─── Divider line as a thin View ─────────────────────────────────────────────
 const Divider = () => <View style={styles.divider} />;
-
-// ─── Vertical divider ─────────────────────────────────────────────────────────
 const VerticalDivider = () => <View style={styles.verticalDivider} />;
 
-// ─── Bar chart for "Top 3 Minutes In Humini" ─────────────────────────────────
+// ─── Bar chart colors ─────────────────────────────────────────────────────────
+const BAR_COLORS = [
+  { bar: '#F2E05A', text: 'rgba(101,82,0,0.4)', icon: '#655200', opacity: 0.4 },
+  { bar: '#A8EEF0', text: 'rgba(21,120,126,0.5)', icon: '#15787E', opacity: 0.5 },
+  { bar: '#F5B8D9', text: 'rgba(100,27,68,0.5)', icon: '#641B44', opacity: 0.5 },
+];
+const BAR_HEIGHTS = [191, 123, 88];
+const MAX_BAR_HEIGHT = 191;
+const BAR_WIDTH = 90;
+
 interface BarEntryProps {
-  photo: string;
   name: string;
   barHeight: number;
   barColor: string;
   minutes: string;
   minutesColor: string;
-  /** Raw hex color for the Humini mark SVG (e.g. '#655200') */
   iconColor: string;
-  /** Opacity for the Humini mark SVG (0–1) */
   iconOpacity: number;
-  rank: 'gold' | 'teal' | 'pink';
-  topOffset: number; // vertical offset so bars align at bottom
+  topOffset: number;
 }
 
-const BAR_WIDTH = 90;
-const MAX_BAR_HEIGHT = 191; // tallest bar (1st place)
-
 const BarEntry: React.FC<BarEntryProps> = ({
-  photo,
   name,
   barHeight,
   barColor,
@@ -65,8 +55,8 @@ const BarEntry: React.FC<BarEntryProps> = ({
     <View style={[styles.barEntryWrapper, { marginTop: topOffset }]}>
       {/* Avatar + name above bar */}
       <View style={styles.barAvatarSection}>
-        <Image source={{ uri: photo }} style={styles.barAvatar} />
-        <Text style={styles.barName}>{name}</Text>
+        <InitialsAvatar name={name} size={36} borderRadius={8} />
+        <Text style={styles.barName}>{name.split(' ')[0]}</Text>
       </View>
 
       {/* Decorative bar */}
@@ -74,12 +64,10 @@ const BarEntry: React.FC<BarEntryProps> = ({
         style={[
           styles.barShape,
           { height: barHeight, backgroundColor: barColor },
-        ]}>
-        {/* Humini brand mark SVG */}
+        ]}
+      >
         <HuminiMarkIcon width={22} height={26} color={iconColor} opacity={iconOpacity} />
-        <Text style={[styles.barMinutes, { color: minutesColor }]}>
-          {minutes}
-        </Text>
+        <Text style={[styles.barMinutes, { color: minutesColor }]}>{minutes}</Text>
       </View>
     </View>
   );
@@ -87,20 +75,67 @@ const BarEntry: React.FC<BarEntryProps> = ({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export const ProfileContent: React.FC = () => {
+  const logout = useAuthStore(s => s.logout);
+
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useUserProfile();
+
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    refetch: refetchStats,
+  } = useUserStats();
+
+  const {
+    data: leaderboard,
+    isLoading: leaderboardLoading,
+    refetch: refetchLeaderboard,
+  } = useLeaderboard();
+
+  const isLoading = profileLoading || statsLoading || leaderboardLoading;
+
+  const onRefresh = useCallback(() => {
+    refetchProfile();
+    refetchStats();
+    refetchLeaderboard();
+  }, [refetchProfile, refetchStats, refetchLeaderboard]);
+
   const handleLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => {} },
+      {
+        text: 'Log out',
+        style: 'destructive',
+        onPress: () => {
+          logout();
+        },
+      },
     ]);
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <SkeletonLoader width="100%" height={120} borderRadius={16} style={{ marginBottom: 16 }} />
+        <SkeletonLoader width="100%" height={280} borderRadius={16} style={{ marginBottom: 16 }} />
+        <SkeletonLoader width="100%" height={140} borderRadius={16} style={{ marginBottom: 16 }} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.scrollView}
       contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}>
-
-      {/* ── User Info Card ─────────────────────────────────────────────── */}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={COLORS.primary} />
+      }
+    >
+      {/* ── User Info Card ────────────────────────────────────────────────── */}
       <AnimatedView animation="slideUp" delay={0} style={{ marginBottom: 16 }}>
         <Shadow
           distance={8}
@@ -111,88 +146,66 @@ export const ProfileContent: React.FC = () => {
         >
           <View style={styles.card}>
             <View style={styles.userInfoTop}>
-          <Image 
-          source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80' }} 
-          style={styles.avatar} />
-          <View style={styles.userTextBlock}>
-            <Text style={styles.userName}>Tamilselvan</Text>
-            <Text style={styles.userRole}>UX Designer</Text>
-          </View>
-        </View>
+              <InitialsAvatar name={profile?.name ?? 'U'} size={64} />
+              <View style={styles.userTextBlock}>
+                <Text style={styles.userName}>{profile?.name ?? '—'}</Text>
+                <Text style={styles.userRole}>{profile?.jobRole ?? '—'}</Text>
+              </View>
+            </View>
 
-        <Divider />
+            <Divider />
 
-        <View style={styles.userInfoRow}>
-          <Text style={styles.infoLabel}>Email:</Text>
-          <Text style={styles.infoValue}>tamil.selvan@arus.co.in</Text>
-        </View>
+            <View style={styles.userInfoRow}>
+              <Text style={styles.infoLabel}>Email:</Text>
+              <Text style={styles.infoValue} numberOfLines={1}>{profile?.email ?? '—'}</Text>
+            </View>
 
-        <View style={styles.userInfoRow}>
-          <Text style={styles.infoLabel}>Department:</Text>
-          <Text style={styles.infoValue}>Product Engineering</Text>
-        </View>
+            <View style={styles.userInfoRow}>
+              <Text style={styles.infoLabel}>Department:</Text>
+              <Text style={styles.infoValue}>{profile?.department ?? '—'}</Text>
+            </View>
           </View>
         </Shadow>
       </AnimatedView>
 
-      {/* ── Top 3 Minutes Card ────────────────────────────────────────── */}
-      <AnimatedView animation="slideUp" delay={100} style={{ marginBottom: 16 }}>
-        <Shadow
-          distance={8}
-          startColor="#0000000A"
-          offset={[0, 8]}
-          style={{ width: '100%', borderRadius: 16 }}
-          containerStyle={{ width: '100%' }}
-        >
-          <View style={[styles.card, styles.leaderboardCard]}>
-            <Text style={styles.leaderboardTitle}>Top 3 Minutes In Humini</Text>
+      {/* ── Top 3 Minutes Card ─────────────────────────────────────────────── */}
+      {(leaderboard && leaderboard.length > 0) && (
+        <AnimatedView animation="slideUp" delay={100} style={{ marginBottom: 16 }}>
+          <Shadow
+            distance={8}
+            startColor="#0000000A"
+            offset={[0, 8]}
+            style={{ width: '100%', borderRadius: 16 }}
+            containerStyle={{ width: '100%' }}
+          >
+            <View style={[styles.card, styles.leaderboardCard]}>
+              <Text style={styles.leaderboardTitle}>Top 3 Minutes In Humini</Text>
+              <View style={styles.barsRow}>
+                {leaderboard.map((entry, idx) => {
+                  const colorConfig = BAR_COLORS[idx] ?? BAR_COLORS[0];
+                  const barHeight = BAR_HEIGHTS[idx] ?? 70;
+                  const topOffset = idx === 0 ? 0 : MAX_BAR_HEIGHT - barHeight - 58;
+                  return (
+                    <BarEntry
+                      key={entry.userId}
+                      name={entry.name}
+                      barHeight={barHeight}
+                      barColor={colorConfig.bar}
+                      minutes={`${entry.minutes}M`}
+                      minutesColor={colorConfig.text}
+                      iconColor={colorConfig.icon}
+                      iconOpacity={colorConfig.opacity}
+                      topOffset={topOffset}
+                    />
+                  );
+                })}
+              </View>
+            </View>
+          </Shadow>
+        </AnimatedView>
+      )}
 
-        <View style={styles.barsRow}>
-          {/* 1st place — John (tallest, leftmost) */}
-          <BarEntry
-            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
-            name="John"
-            barHeight={MAX_BAR_HEIGHT}
-            barColor="#F2E05A"
-            minutes="400M"
-            minutesColor="rgba(101,82,0,0.4)"
-            iconColor="#655200"
-            iconOpacity={0.4}
-            rank="gold"
-            topOffset={0}
-          />
-          {/* 2nd place — Priya */}
-          <BarEntry
-            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
-            name="Priya"
-            barHeight={123}
-            barColor="#A8EEF0"
-            minutes="200M"
-            minutesColor="rgba(21,120,126,0.5)"
-            iconColor="#15787E"
-            iconOpacity={0.5}
-            rank="teal"
-            topOffset={MAX_BAR_HEIGHT - 123 - 58}
-          />
-          {/* 3rd place — Rahul */}
-          <BarEntry
-            photo={'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80'}
-            name="Rahul"
-            barHeight={88}
-            barColor="#F5B8D9"
-            minutes="100M"
-            minutesColor="rgba(100,27,68,0.5)"
-            iconColor="#641B44"
-            iconOpacity={0.5}
-            rank="pink"
-            topOffset={MAX_BAR_HEIGHT - 88 - 58}
-          />
-          </View>
-        </View>
-      </Shadow>
-    </AnimatedView>
-
-      {/* ── Stats Card ────────────────────────────────────────────────── */}
+      {/* ── Stats Card ─────────────────────────────────────────────────────── */}
       <AnimatedView animation="slideUp" delay={200} style={{ marginBottom: 16 }}>
         <Shadow
           distance={8}
@@ -202,35 +215,31 @@ export const ProfileContent: React.FC = () => {
           containerStyle={{ width: '100%' }}
         >
           <View style={[styles.card, styles.statsCard]}>
-            {/* Top centred: total minutes */}
             <View style={styles.statsTotalSection}>
-          <Text style={styles.statsNumber}>500</Text>
-          <Text style={styles.statsLabel}>Total minutes spent</Text>
-        </View>
+              <Text style={styles.statsNumber}>{stats?.totalMinutes ?? 0}</Text>
+              <Text style={styles.statsLabel}>Total minutes spent</Text>
+            </View>
 
-        <Divider />
+            <Divider />
 
-        {/* Bottom row: Joy Given | Joy Received */}
-        <View style={styles.statsBottomRow}>
-          <View style={styles.statItem}>
-            <Text style={styles.statsNumber}>75</Text>
-            <Text style={styles.statsLabel}>Joy Given</Text>
-          </View>
-          <VerticalDivider />
-          <View style={styles.statItem}>
-            <Text style={styles.statsNumber}>32</Text>
-            <Text style={styles.statsLabel}>Joy Received</Text>
+            <View style={styles.statsBottomRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statsNumber}>{stats?.joyGiven ?? 0}</Text>
+                <Text style={styles.statsLabel}>Joy Given</Text>
+              </View>
+              <VerticalDivider />
+              <View style={styles.statItem}>
+                <Text style={styles.statsNumber}>{stats?.joyReceived ?? 0}</Text>
+                <Text style={styles.statsLabel}>Joy Received</Text>
+              </View>
             </View>
           </View>
-        </View>
-      </Shadow>
-    </AnimatedView>
+        </Shadow>
+      </AnimatedView>
 
-      {/* ── Logout Button ─────────────────────────────────────────────── */}
+      {/* ── Logout Button ──────────────────────────────────────────────────── */}
       <AnimatedView animation="slideUp" delay={300}>
-        <AnimatedPressable
-          style={styles.logoutButton}
-          onPress={handleLogout}>
+        <AnimatedPressable style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Log out</Text>
         </AnimatedPressable>
       </AnimatedView>
@@ -242,6 +251,11 @@ export const ProfileContent: React.FC = () => {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   scrollView: {
     flex: 1,
   },
@@ -250,8 +264,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-
-  // ── Card shared ──
   card: {
     width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
@@ -260,20 +272,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
     overflow: 'hidden',
   },
-
-  // ── User info card ──
   userInfoTop: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 16,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: 16,
+    gap: 16,
   },
   userTextBlock: {
     flex: 1,
@@ -306,6 +311,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
+    gap: 8,
   },
   infoLabel: {
     fontFamily: FONTS.family,
@@ -322,9 +328,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     letterSpacing: 0.1,
     color: '#777777',
+    flexShrink: 1,
+    textAlign: 'right',
   },
-
-  // ── Leaderboard card ──
   leaderboardCard: {
     paddingTop: 18,
     paddingBottom: 0,
@@ -345,7 +351,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingBottom: 0,
-    height: MAX_BAR_HEIGHT + 60, // room for bar + avatar/name column
+    height: MAX_BAR_HEIGHT + 60,
   },
   barEntryWrapper: {
     flex: 1,
@@ -354,12 +360,7 @@ const styles = StyleSheet.create({
   barAvatarSection: {
     alignItems: 'center',
     marginBottom: 4,
-  },
-  barAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    marginBottom: 4,
+    gap: 4,
   },
   barName: {
     fontFamily: FONTS.family,
@@ -378,11 +379,6 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 12,
   },
-  huminiMark: {
-    fontSize: 24,
-    lineHeight: 28,
-    fontWeight: '700',
-  },
   barMinutes: {
     fontFamily: FONTS.family,
     fontWeight: FONTS.weights.medium,
@@ -391,8 +387,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
     textAlign: 'center',
   },
-
-  // ── Stats card ──
   statsCard: {
     paddingBottom: 0,
   },
@@ -429,8 +423,6 @@ const styles = StyleSheet.create({
     height: 88,
     backgroundColor: '#E8E8E8',
   },
-
-  // ── Logout button ──
   logoutButton: {
     backgroundColor: COLORS.redBackground,
     borderRadius: 16,
@@ -451,7 +443,6 @@ const styles = StyleSheet.create({
     color: '#D10000',
     textAlign: 'center',
   },
-
   bottomSpacer: {
     height: 80,
   },

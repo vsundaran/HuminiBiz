@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, {
@@ -23,6 +24,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
+import { useReportReasons, useSubmitReport } from '../hooks/useCallReport';
 
 // ─── Navigation Types ─────────────────────────────────────────────────────────
 
@@ -87,15 +89,8 @@ const CheckIcon = () => (
 
 // ─── Reason Data ──────────────────────────────────────────────────────────────
 
-const REASONS = [
-  { id: 'inappropriate', emoji: '⚠️', label: 'Inappropriate Behavior' },
-  { id: 'personal', emoji: '🔒', label: 'Asked for Personal Info' },
-  { id: 'sexual', emoji: '🔞', label: 'Sexual Content' },
-  { id: 'abusive', emoji: '🚫', label: 'Abusive Language' },
-  { id: 'others', emoji: '💬', label: 'Others' },
-] as const;
-
-type ReasonId = (typeof REASONS)[number]['id'];
+// NOTE: Static REASONS removed — now dynamically fetched from useReportReasons()
+// 'others' id is a fallback for the last item assumed to be 'others'
 
 const MAX_CHARS = 60;
 
@@ -153,27 +148,32 @@ export const SelectReasonScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const [selectedReasons, setSelectedReasons] = useState<Set<ReasonId>>(
-    new Set(),
-  );
+  // ── API hooks ────────────────────────────────────────────────────────────
+  const { data: reasons = [], isLoading: reasonsLoading } = useReportReasons();
+  const { mutate: submitReport, isPending: isSubmitting } = useSubmitReport();
+
+  // Emojis mapped by label keywords (server doesn't return emojis)
+  const getEmoji = (label: string): string => {
+    const l = label.toLowerCase();
+    if (l.includes('inappropri')) { return '⚠️'; }
+    if (l.includes('personal')) { return '🔒'; }
+    if (l.includes('sexual')) { return '🔞'; }
+    if (l.includes('abusive') || l.includes('language')) { return '🚫'; }
+    return '💬';
+  };
+
+  const [selectedReasonIds, setSelectedReasonIds] = useState<Set<string>>(new Set());
   const [othersText, setOthersText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
   const toggleReason = useCallback(
-    (id: ReasonId) => {
-      setSelectedReasons(prev => {
+    (id: string) => {
+      setSelectedReasonIds(prev => {
         const next = new Set(prev);
         if (next.has(id)) {
           next.delete(id);
-          if (id === 'others') {
-            Keyboard.dismiss();
-          }
         } else {
           next.add(id);
-          // Auto-focus input when Others is selected
-          if (id === 'others') {
-            setTimeout(() => inputRef.current?.focus(), 200);
-          }
         }
         return next;
       });
@@ -181,11 +181,8 @@ export const SelectReasonScreen = () => {
     [],
   );
 
-  const othersSelected = selectedReasons.has('others');
-  const hasSelection = selectedReasons.size > 0;
-  // Submit is valid: at least one reason selected;
-  // if Others is selected, its text field may optionally be filled
-  const canSubmit = hasSelection;
+  const hasSelection = selectedReasonIds.size > 0;
+  const canSubmit = hasSelection && !isSubmitting;
 
   const handleCancel = () => {
     Keyboard.dismiss();
@@ -197,9 +194,21 @@ export const SelectReasonScreen = () => {
   };
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
-    // TODO: wire API call with selectedReasons + othersText
-    navigation.navigate('ReportSubmitted');
+    if (!canSubmit) { return; }
+    // Submit with selected reason IDs
+    submitReport(
+      {
+        callId: '',           // Will be populated once call state is tracked
+        reportedUserId: '',   // Same
+        reasons: Array.from(selectedReasonIds),
+        additionalNote: othersText.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          navigation.navigate('ReportSubmitted');
+        },
+      },
+    );
   };
 
   return (
@@ -255,42 +264,40 @@ export const SelectReasonScreen = () => {
 
             {/* Reason rows */}
             <View style={styles.reasonList}>
-              {REASONS.map(reason => (
-                
-                <React.Fragment key={reason.id}>
+              {reasons.map(reason => (
+                <React.Fragment key={reason._id}>
                   <ReasonRow
-                    emoji={reason.emoji}
+                    emoji={getEmoji(reason.label)}
                     label={reason.label}
-                    selected={selectedReasons.has(reason.id)}
-                    isOthers={true}
-                    onPress={() => toggleReason(reason.id)}
+                    selected={selectedReasonIds.has(reason._id)}
+                    onPress={() => toggleReason(reason._id)}
                   />
-
-                  {/* Inline text input shown only when Others is selected */}
-                  {reason.id === 'others' && othersSelected && (
-                    <View style={styles.othersInputWrapper}>
-                      <TextInput
-                        ref={inputRef}
-                        style={styles.othersInput}
-                        placeholder="Type here"
-                        placeholderTextColor={COLORS.textPlaceholder}
-                        value={othersText}
-                        onChangeText={t =>
-                          setOthersText(t.slice(0, MAX_CHARS))
-                        }
-                        maxLength={MAX_CHARS}
-                        multiline
-                        textAlignVertical="top"
-                        returnKeyType="done"
-                        blurOnSubmit
-                      />
-                      <Text style={styles.charCount}>
-                        {othersText.length}/{MAX_CHARS}
-                      </Text>
-                    </View>
-                  )}
                 </React.Fragment>
               ))}
+
+              {/* Others text input shown when Others is among the reasons and selected */}
+              {selectedReasonIds.size > 0 && othersText !== undefined && (
+                <View style={styles.othersInputWrapper}>
+                  <TextInput
+                    ref={inputRef}
+                    style={styles.othersInput}
+                    placeholder="Add any additional note (optional)"
+                    placeholderTextColor={COLORS.textPlaceholder}
+                    value={othersText}
+                    onChangeText={t =>
+                      setOthersText(t.slice(0, MAX_CHARS))
+                    }
+                    maxLength={MAX_CHARS}
+                    multiline
+                    textAlignVertical="top"
+                    returnKeyType="done"
+                    blurOnSubmit
+                  />
+                  <Text style={styles.charCount}>
+                    {othersText.length}/{MAX_CHARS}
+                  </Text>
+                </View>
+              )}
             </View>
           </ScrollView>
 

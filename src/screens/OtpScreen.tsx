@@ -1,33 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, Pressable } from 'react-native';
+import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, Pressable, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ArrowLeftIcon } from '../assets/icons/ArrowLeftIcon';
 import { PenIcon } from '../assets/icons/PenIcon';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { useRequestOtp, useVerifyOtp } from '../hooks/useAuth';
 
 const { width } = Dimensions.get('window');
 
 type RootStackParamList = {
-  Login: undefined;
+  Login: { email?: string } | undefined;
   Home: undefined;
   Otp: { email: string };
 };
 
 export const OtpScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Otp'>>();
   
-  // Using a mock email since we don't have the param set up strictly yet in this context
-  const email = "tamil.selvan@arus.sg";
+  const email = route.params?.email || '';
   
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timeLeft, setTimeLeft] = useState(59);
   
   const inputRefs = useRef<Array<TextInput | null>>([]);
+
+  const { mutate: verifyOtp, isPending: isVerifying } = useVerifyOtp();
+  const { mutate: requestOtp, isPending: isResending } = useRequestOtp();
   
   useEffect(() => {
     if (timeLeft > 0) {
@@ -44,7 +48,7 @@ export const OtpScreen = () => {
     setOtp(newOtp);
 
     // Auto-focus logic
-    if (value.length === 1 && index < 3) {
+    if (value.length === 1 && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
     
@@ -60,21 +64,42 @@ export const OtpScreen = () => {
   };
 
   const handleResend = () => {
-    setTimeLeft(59);
-    // Call API to resend OTP
+    if (isResending) return;
+    
+    requestOtp({ email }, {
+      onSuccess: () => {
+        setTimeLeft(59);
+        Alert.alert('Success', 'A new OTP has been sent to your email.');
+      },
+      onError: (error: any) => {
+        Alert.alert('Error', error.response?.data?.message || 'Failed to resend OTP.');
+      }
+    });
   };
 
   const handleLogin = () => {
-    // Navigate to Home or Verify OTP API
-    console.log("OTP verified:", otp.join(''));
-    navigation.navigate('Home');
+    const otpCode = otp.join('');
+    if (otpCode.length !== 6 || isVerifying) return;
+
+    verifyOtp(
+      { email, otp: otpCode },
+      {
+        onSuccess: () => {
+          navigation.navigate('Home');
+        },
+        onError: (error: any) => {
+          Alert.alert('Error', error.response?.data?.message || 'Invalid OTP. Please try again.');
+        }
+      }
+    );
   };
 
   const handleBack = () => {
-    navigation.navigate('Login');
+    navigation.navigate('Login', { email });
   };
 
   const isOtpComplete = otp.every(digit => digit !== '');
+  const isSubmitDisabled = !isOtpComplete || isVerifying || isResending;
 
   return (
     <AnimatedScreen style={styles.container}>
@@ -144,8 +169,10 @@ export const OtpScreen = () => {
                     Resend OTP in <RNText style={styles.resendTimer}>{timeLeft}</RNText>
                  </RNText>
                ) : (
-                 <AnimatedPressable onPress={handleResend}>
-                    <RNText style={styles.resendAction}>Resend</RNText>
+                 <AnimatedPressable onPress={handleResend} disabled={isResending}>
+                    <RNText style={[styles.resendAction, isResending && { color: '#9B9B9B' }]}>
+                      {isResending ? 'Resending...' : 'Resend'}
+                    </RNText>
                  </AnimatedPressable>
                )}
             </View>
@@ -153,26 +180,24 @@ export const OtpScreen = () => {
 
           {/* Submit Button */}
           <AnimatedView animation="slideUp" delay={200} style={styles.buttonPosition}>
-            {/* <Shadow
-              distance={isOtpComplete ? 5 : 0}
-              startColor="rgba(72,86,92,0.29)"
-              offset={[0, 4]}
-              style={{ width: '100%', borderRadius: 10 }}
-              containerStyle={{ width: '100%' }}
-            > */}
-              <AnimatedPressable 
-                  style={[styles.button, !isOtpComplete && styles.buttonDisabled]} 
-                  onPress={handleLogin}
-                  disabled={!isOtpComplete}
-              >
-                  <RNText style={[styles.buttonText, !isOtpComplete && styles.buttonTextDisabled]}>
-                  Log in
-                  </RNText>
-                  <View style={styles.buttonIcon}>
-                      <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
-                  </View>
-              </AnimatedPressable>
-            {/* </Shadow> */}
+            <AnimatedPressable 
+                style={[styles.button, isSubmitDisabled && styles.buttonDisabled]} 
+                onPress={handleLogin}
+                disabled={isSubmitDisabled}
+            >
+                {isVerifying ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                ) : (
+                  <>
+                    <RNText style={[styles.buttonText, !isOtpComplete && styles.buttonTextDisabled]}>
+                      Log in
+                    </RNText>
+                    <View style={styles.buttonIcon}>
+                        <ArrowRightIcon size={20} color={isOtpComplete ? '#FFFFFF' : '#9B9B9B'} />
+                    </View>
+                  </>
+                )}
+            </AnimatedPressable>
           </AnimatedView>
         </View>
       </SafeAreaView>
@@ -249,7 +274,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   otpInputWrapper: {
-    width: 76,
+    width: 56,
     height: 48,
     backgroundColor: 'rgba(255,255,255,0.6)',
     borderRadius: 8,
