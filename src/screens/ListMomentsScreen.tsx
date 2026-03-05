@@ -21,7 +21,7 @@ import {
 } from '../hooks/useMoments';
 import { useCategories } from '../hooks/useCategories';
 import { momentToCardProps } from '../utils/momentMapper';
-import { Moment } from '../types/moment.types';
+import { Moment, PaginatedMoments } from '../types/moment.types';
 import { SkeletonLoader } from '../components/common/SkeletonLoader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -33,7 +33,7 @@ type RootStackParamList = {
 
 // ─── Helper: flatten pages from infinite query result ─────────────────────────
 const flatPages = (data: any): Moment[] =>
-  data?.pages?.flatMap((p: Moment[]) => p) ?? [];
+  data?.pages?.flatMap((p: PaginatedMoments) => p.moments) ?? [];
 
 // ─── LiveMomentsScreen ────────────────────────────────────────────────────────
 export const ListMomentsScreen = () => {
@@ -194,7 +194,7 @@ export const ListMomentsScreen = () => {
             ListHeaderComponent={
               activeFeed === 'live' ? (
                 <AnimatedView animation="slideDown" delay={200}>
-                  <LiveMomentsBanner count={allMoments.length} />
+                  <LiveMomentsBanner count={activeQuery.data?.pages?.[0]?.totalCount ?? 0} />
                 </AnimatedView>
               ) : null
             }

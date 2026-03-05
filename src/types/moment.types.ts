@@ -39,6 +39,11 @@ export interface Moment {
 // Feed types returned by the server
 export type MomentFeedType = 'live' | 'upcoming' | 'later';
 
+export interface PaginatedMoments {
+  moments: Moment[];
+  totalCount: number;
+}
+
 // My moments response shape
 export interface MyMomentsData {
   activeMoments: Moment[];

@@ -1,6 +1,7 @@
 import { apiClient } from './api/axios';
 import {
   Moment,
+  PaginatedMoments,
   MyMomentsData,
   CreateMomentPayload,
   ToggleLikeResponse,
@@ -14,32 +15,32 @@ interface ApiResponse<T> {
 }
 
 // ─── Fetch live moments (ongoing right now) ───────────────────────────────────
-export const getLiveMoments = async (limit?: number, categoryId?: string): Promise<Moment[]> => {
+export const getLiveMoments = async (limit?: number, categoryId?: string): Promise<PaginatedMoments> => {
   const params: Record<string, any> = {};
   if (limit) { params.limit = limit; }
   if (categoryId) { params.categoryId = categoryId; }
 
-  const { data } = await apiClient.get<ApiResponse<Moment[]>>('/moments/live', { params });
+  const { data } = await apiClient.get<ApiResponse<PaginatedMoments>>('/moments/live', { params });
   return data.data;
 };
 
 // ─── Fetch upcoming moments (start in next 2h) ───────────────────────────────
-export const getUpcomingMoments = async (limit?: number, categoryId?: string): Promise<Moment[]> => {
+export const getUpcomingMoments = async (limit?: number, categoryId?: string): Promise<PaginatedMoments> => {
   const params: Record<string, any> = {};
   if (limit) { params.limit = limit; }
   if (categoryId) { params.categoryId = categoryId; }
 
-  const { data } = await apiClient.get<ApiResponse<Moment[]>>('/moments/upcoming', { params });
+  const { data } = await apiClient.get<ApiResponse<PaginatedMoments>>('/moments/upcoming', { params });
   return data.data;
 };
 
 // ─── Fetch later moments (start after 2h) ────────────────────────────────────
-export const getLaterMoments = async (limit?: number, categoryId?: string): Promise<Moment[]> => {
+export const getLaterMoments = async (limit?: number, categoryId?: string): Promise<PaginatedMoments> => {
   const params: Record<string, any> = {};
   if (limit) { params.limit = limit; }
   if (categoryId) { params.categoryId = categoryId; }
 
-  const { data } = await apiClient.get<ApiResponse<Moment[]>>('/moments/later', { params });
+  const { data } = await apiClient.get<ApiResponse<PaginatedMoments>>('/moments/later', { params });
   return data.data;
 };
 

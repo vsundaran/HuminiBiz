@@ -18,7 +18,7 @@ import { Shadow } from 'react-native-shadow-2';
 import { SkeletonLoader } from '../components/common/SkeletonLoader';
 import { useLiveMoments, useUpcomingMoments, useLaterMoments } from '../hooks/useMoments';
 import { momentToCardProps } from '../utils/momentMapper';
-import { Moment } from '../types/moment.types';
+import { Moment, PaginatedMoments } from '../types/moment.types';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 type HomeRouteParams = {
@@ -36,7 +36,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { data: later,    isLoading: loadingLater }    = useLaterMoments({ limit: 3 });
 
   const renderSectionCards = (
-    moments: Moment[] | undefined,
+    data: PaginatedMoments | undefined,
     feedType: 'live' | 'upcoming' | 'later',
     isLoading: boolean
   ) => {
@@ -48,6 +48,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
         </>
       );
     }
+    const moments = data?.moments;
     if (!moments || moments.length === 0) {
       return (
         <AnimatedView animation="slideUp" delay={200}>
@@ -78,9 +79,9 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
           {renderSectionCards(live, 'live', loadingLive)}
 
           <AnimatedView animation="slideUp" delay={100}>
-            {!loadingLive && (live?.length ?? 0) > 0 && (
+            {!loadingLive && (live?.totalCount ?? 0) > 0 && (
               <ViewAllButton
-                label={`View All (${live!.length})`}
+                label={`View All (${live!.totalCount})`}
                 onPress={() => navigation.navigate('ListMoments', { feedType: 'live' })}
             />
           )}
@@ -96,9 +97,9 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
           {renderSectionCards(upcoming, 'upcoming', loadingUpcoming)}
 
           <AnimatedView animation="slideUp" delay={200}>
-            {!loadingUpcoming && (upcoming?.length ?? 0) > 0 && (
+            {!loadingUpcoming && (upcoming?.totalCount ?? 0) > 0 && (
               <ViewAllButton
-                label={`View All (${upcoming!.length})`}
+                label={`View All (${upcoming!.totalCount})`}
                 onPress={() => navigation.navigate('ListMoments', { feedType: 'upcoming' })}
             />
 
@@ -115,9 +116,9 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
           {renderSectionCards(later, 'later', loadingLater)}
 
           <AnimatedView animation="slideUp" delay={200}>
-          {!loadingLater && (later?.length ?? 0) > 0 && (
+          {!loadingLater && (later?.totalCount ?? 0) > 0 && (
             <ViewAllButton
-              label={`View All (${later!.length})`}
+              label={`View All (${later!.totalCount})`}
               onPress={() => navigation.navigate('ListMoments', { feedType: 'later' })}
             />
           )}

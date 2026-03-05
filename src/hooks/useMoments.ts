@@ -108,12 +108,13 @@ export const useInfiniteLiveMoments = (categoryId?: string) => {
   return useInfiniteQuery({
     queryKey: momentKeys.liveInfinite(categoryId),
     queryFn: ({ pageParam = 0 }) =>
-      getLiveMoments(undefined, categoryId).then((all) =>
-        all.slice(pageParam, pageParam + PAGE_SIZE)
-      ),
+      getLiveMoments(undefined, categoryId).then((all) => ({
+        moments: all.moments.slice(pageParam, pageParam + PAGE_SIZE),
+        totalCount: all.totalCount
+      })),
     getNextPageParam: (lastPage, allPages) => {
-      const fetched = allPages.flat().length;
-      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+      const fetched = allPages.flatMap((p) => p.moments).length;
+      return lastPage.moments.length === PAGE_SIZE ? fetched : undefined;
     },
     staleTime: 1000 * 30,
     refetchInterval: 1000 * 60,
@@ -126,12 +127,13 @@ export const useInfiniteUpcomingMoments = (categoryId?: string) => {
   return useInfiniteQuery({
     queryKey: momentKeys.upcomingInfinite(categoryId),
     queryFn: ({ pageParam = 0 }) =>
-      getUpcomingMoments(undefined, categoryId).then((all) =>
-        all.slice(pageParam, pageParam + PAGE_SIZE)
-      ),
+      getUpcomingMoments(undefined, categoryId).then((all) => ({
+        moments: all.moments.slice(pageParam, pageParam + PAGE_SIZE),
+        totalCount: all.totalCount
+      })),
     getNextPageParam: (lastPage, allPages) => {
-      const fetched = allPages.flat().length;
-      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+      const fetched = allPages.flatMap((p) => p.moments).length;
+      return lastPage.moments.length === PAGE_SIZE ? fetched : undefined;
     },
     staleTime: 1000 * 60 * 2,
     initialPageParam: 0,
@@ -143,12 +145,13 @@ export const useInfiniteLaterMoments = (categoryId?: string) => {
   return useInfiniteQuery({
     queryKey: momentKeys.laterInfinite(categoryId),
     queryFn: ({ pageParam = 0 }) =>
-      getLaterMoments(undefined, categoryId).then((all) =>
-        all.slice(pageParam, pageParam + PAGE_SIZE)
-      ),
+      getLaterMoments(undefined, categoryId).then((all) => ({
+        moments: all.moments.slice(pageParam, pageParam + PAGE_SIZE),
+        totalCount: all.totalCount
+      })),
     getNextPageParam: (lastPage, allPages) => {
-      const fetched = allPages.flat().length;
-      return lastPage.length === PAGE_SIZE ? fetched : undefined;
+      const fetched = allPages.flatMap((p) => p.moments).length;
+      return lastPage.moments.length === PAGE_SIZE ? fetched : undefined;
     },
     staleTime: 1000 * 60 * 5,
     initialPageParam: 0,
