@@ -189,7 +189,11 @@ export const LiveMomentsScreen = () => {
             showsVerticalScrollIndicator={false}
             onEndReached={loadMore}
             onEndReachedThreshold={0.4}
-            ListHeaderComponent={<LiveMomentsBanner />}
+            ListHeaderComponent={
+            <AnimatedView animation="slideDown" delay={200}>
+              <LiveMomentsBanner />
+            </AnimatedView>
+          }
             ListFooterComponent={renderFooter}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>

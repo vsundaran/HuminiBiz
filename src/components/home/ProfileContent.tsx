@@ -25,6 +25,8 @@ import { SkeletonLoader } from '../common/SkeletonLoader';
 import { PenIcon } from '../../assets/icons/PenIcon';
 import { AppAlert } from '../common/AppAlert';
 import { AppConfirm } from '../common/AppConfirm';
+import authService from '../../services/auth.service';
+
 
 // ─── Divider line as a thin View ─────────────────────────────────────────────
 const Divider = () => <View style={styles.divider} />;
@@ -336,14 +338,21 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
     setLogoutConfirmVisible(true);
   };
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     setLogoutConfirmVisible(false);
-    logout();
-    // Reset the navigation stack so the user lands on Login
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
+    try {
+      // Best-effort: tell the server to revoke all refresh tokens for this user.
+      // Even if this fails (e.g. no network), we still clear local state.
+      await authService.logout();
+    } catch {
+      // Ignore — local logout always proceeds
+    } finally {
+      logout();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    }
   };
 
   if (isLoading) {

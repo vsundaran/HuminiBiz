@@ -38,16 +38,25 @@ type Category = string;
 // ─── Time slots (every 30m, 6AM–11:30PM) ─────────────────────────────────────
 function buildTimeSlots(): string[] {
   const slots: string[] = [];
-  for (let h = 6; h <= 23; h++) {
+  
+  for (let h = 0; h < 24; h++) {
+    // Determine AM or PM
     const period = h < 12 ? 'AM' : 'PM';
+    
+    // Convert 24h to 12h format
+    // 0 becomes 12 (AM), 13 becomes 1 (PM), etc.
     const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    slots.push(`${displayH}:00${period}`);
-    if (h < 23) {
-      slots.push(`${displayH}:30${period}`);
-    }
+
+    // Add :00 slot
+    slots.push(`${displayH}:00 ${period}`);
+    
+    // Add :30 slot
+    slots.push(`${displayH}:30 ${period}`);
   }
+  
   return slots;
 }
+
 const TIME_SLOTS = buildTimeSlots();
 
 // ─── Duration calculator ─────────────────────────────────────────────────────

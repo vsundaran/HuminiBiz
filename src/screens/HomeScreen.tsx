@@ -52,7 +52,9 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
     if (!moments || moments.length === 0) {
       return (
-        <Text style={styles.emptyText}>No moments right now.</Text>
+        <AnimatedView animation="slideUp" delay={200}>
+          <Text style={styles.emptyText}>No moments right now.</Text>
+        </AnimatedView>
       );
     }
     return moments.map((m) => (
@@ -77,12 +79,14 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(live, 'live', loadingLive)}
 
-          {!loadingLive && (live?.length ?? 0) > 0 && (
-            <ViewAllButton
-              label={`View All (${live!.length})`}
-              onPress={() => navigation.navigate('LiveMoments', { feedType: 'live' })}
+          <AnimatedView animation="slideUp" delay={100}>
+            {!loadingLive && (live?.length ?? 0) > 0 && (
+              <ViewAllButton
+                label={`View All (${live!.length})`}
+                onPress={() => navigation.navigate('LiveMoments', { feedType: 'live' })}
             />
           )}
+          </AnimatedView>
         </View>
 
         {/* ── In Next 2h ──────────────────────────────────────────────────── */}
@@ -93,12 +97,15 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(upcoming, 'upcoming', loadingUpcoming)}
 
-          {!loadingUpcoming && (upcoming?.length ?? 0) > 0 && (
-            <ViewAllButton
-              label={`View All (${upcoming!.length})`}
-              onPress={() => navigation.navigate('LiveMoments', { feedType: 'upcoming' })}
+          <AnimatedView animation="slideUp" delay={200}>
+            {!loadingUpcoming && (upcoming?.length ?? 0) > 0 && (
+              <ViewAllButton
+                label={`View All (${upcoming!.length})`}
+                onPress={() => navigation.navigate('LiveMoments', { feedType: 'upcoming' })}
             />
+
           )}
+          </AnimatedView>
         </View>
 
         {/* ── Others (later) ──────────────────────────────────────────────── */}
@@ -109,12 +116,14 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(later, 'later', loadingLater)}
 
+          <AnimatedView animation="slideUp" delay={200}>
           {!loadingLater && (later?.length ?? 0) > 0 && (
             <ViewAllButton
               label={`View All (${later!.length})`}
               onPress={() => navigation.navigate('LiveMoments', { feedType: 'later' })}
             />
           )}
+          </AnimatedView>
         </View>
 
         <View style={styles.bottomSpacer} />
