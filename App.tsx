@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { QueryClientProvider } from '@tanstack/react-query';
 import BootSplash from 'react-native-bootsplash';
+
+import { useAuthStore } from './src/store/auth.store';
 
 import { gluestackConfig } from './src/theme/gluestack.config';
 import { queryClient } from './src/services/api/queryClient';
@@ -27,14 +29,43 @@ import { CreateMomentScreen } from './src/screens/CreateMomentScreen';
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
+  const [isReady, setIsReady] = useState(false);
+  const accessToken = useAuthStore((state) => state.accessToken);
+
   useEffect(() => {
-    const init = async () => {
-      // You can implement any pre-fetching or setup here if required
+    let unsub: (() => void) | undefined;
+    
+    if (useAuthStore.persist.hasHydrated()) {
+      setIsReady(true);
+    } else {
+      unsub = useAuthStore.persist.onFinishHydration(() => {
+        setIsReady(true);
+      });
+    }
+
+    return () => {
+      if (unsub) unsub();
     };
-    init().finally(async () => {
-      await BootSplash.hide({ fade: true });
-    });
   }, []);
+
+  useEffect(() => {
+    if (isReady) {
+      const init = async () => {
+        // You can implement any pre-fetching or setup here if required
+      };
+      init().finally(() => {
+        // Add a small delay to ensure React Navigation has rendered the initial screen
+        setTimeout(async () => {
+          await BootSplash.hide({ fade: true });
+        }, 100);
+      });
+    }
+  }, [isReady]);
+
+  if (!isReady) {
+    return <></>;
+  }
+
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
@@ -49,7 +80,7 @@ function App(): React.JSX.Element {
               },
             }}>
               <Stack.Navigator
-                initialRouteName="Login"
+                initialRouteName={accessToken ? "Home" : "Login"}
                 screenOptions={{
                   ...globalScreenOptions,
                 }}>
