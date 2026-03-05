@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   buttonDisabled: {
-    backgroundColor: '#DDDDDD',
+    backgroundColor: '#DDD',
   },
   buttonText: {
     fontFamily: 'DM Sans',

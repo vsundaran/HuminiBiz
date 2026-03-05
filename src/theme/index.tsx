@@ -8,7 +8,7 @@ export const COLORS = {
   textPlaceholder: '#9BA1A3',
   textDisabled: '#9B9B9B',
   textBodyText1: '#6E767A',
-  surfaceDisabledBackground: '#DDDDDD',
+  surfaceDisabledBackground: '#DDD',
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',

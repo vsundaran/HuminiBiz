@@ -61,11 +61,11 @@ const TIME_SLOTS = buildTimeSlots();
 
 // ─── Duration calculator ─────────────────────────────────────────────────────
 function parseTo24h(timeStr: string): number {
-  const match = timeStr.match(/(\d+):(\d+)(AM|PM)/);
+  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (!match) { return 0; }
   let h = parseInt(match[1], 10);
   const m = parseInt(match[2], 10);
-  const period = match[3];
+  const period = match[3].toUpperCase();
   if (period === 'AM' && h === 12) { h = 0; }
   if (period === 'PM' && h !== 12) { h += 12; }
   return h * 60 + m;
@@ -150,8 +150,8 @@ export const CreateMomentScreen: React.FC = () => {
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [startDate, setStartDate] = useState<Date>(new Date());
-  const [startTime, setStartTime] = useState<string>('9:30AM');
-  const [endTime, setEndTime] = useState<string>('10:00AM');
+  const [startTime, setStartTime] = useState<string>('9:30 AM');
+  const [endTime, setEndTime] = useState<string>('10:00 AM');
 
   // ── Validation errors ─────────────────────────────────────────────────────
   const [errors, setErrors] = useState<{
@@ -235,11 +235,11 @@ export const CreateMomentScreen: React.FC = () => {
     // Build ISO datetime strings from the selected local date + time slot
     const buildISODateTime = (date: Date, timeStr: string): string => {
       const base = new Date(date);
-      const match = timeStr.match(/(\d+):(\d+)(AM|PM)/);
+      const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
       if (match) {
         let h = parseInt(match[1], 10);
         const min = parseInt(match[2], 10);
-        const period = match[3];
+        const period = match[3].toUpperCase();
         if (period === 'AM' && h === 12) { h = 0; }
         if (period === 'PM' && h !== 12) { h += 12; }
         base.setHours(h, min, 0, 0);
@@ -448,7 +448,7 @@ export const CreateMomentScreen: React.FC = () => {
               {isSubmitting ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.createButtonText}>Create Moment</Text>
+                <Text style={{...styles.createButtonText, color: !isFormValid ? 'black' : 'white' }}>Create Moment</Text>
               )}
             </AnimatedPressable>
           {/* </Shadow> */}
@@ -841,5 +841,6 @@ const styles = StyleSheet.create({
   },
   createButtonDisabled: {
     opacity: 0.5,
+    backgroundColor: '#DDD',
   },
 });

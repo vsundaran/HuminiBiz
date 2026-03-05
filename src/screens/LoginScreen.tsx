@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     marginTop: 47,
   },
   buttonDisabled: {
-    backgroundColor: '#DDDDDD',
+    backgroundColor: '#DDD',
   },
   buttonText: {
     fontFamily: 'DM Sans',
