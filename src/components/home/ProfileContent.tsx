@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   RefreshControl,
   Modal,
   TextInput,
@@ -14,6 +13,7 @@ import {
   ActivityIndicator,
   Pressable,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS, FONTS } from '../../theme';
 import { HuminiMarkIcon } from '../icons/HuminiMarkIcon';
 import { AnimatedView, AnimatedPressable } from '../../components/animated';
@@ -23,6 +23,8 @@ import { useUserProfile, useUserStats, useLeaderboard, useUpdateProfile } from '
 import { useAuthStore } from '../../store/auth.store';
 import { SkeletonLoader } from '../common/SkeletonLoader';
 import { PenIcon } from '../../assets/icons/PenIcon';
+import { AppAlert } from '../common/AppAlert';
+import { AppConfirm } from '../common/AppConfirm';
 
 // ─── Divider line as a thin View ─────────────────────────────────────────────
 const Divider = () => <View style={styles.divider} />;
@@ -89,6 +91,8 @@ interface EditProfileModalProps {
   initialDepartment: string;
   initialJobRole: string;
   email: string;
+  /** When true, the user cannot dismiss without saving (new user onboarding) */
+  mandatory?: boolean;
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({
@@ -98,6 +102,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   initialDepartment,
   initialJobRole,
   email,
+  mandatory = false,
 }) => {
   const [name, setName] = useState(initialName);
   const [department, setDepartment] = useState(initialDepartment);
@@ -125,6 +130,15 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     return Object.keys(errors).length === 0;
   };
 
+  // Alert state for update errors
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const showError = (msg: string) => {
+    setAlertMessage(msg);
+    setAlertVisible(true);
+  };
+
   const handleUpdate = () => {
     if (!validate()) return;
 
@@ -137,10 +151,15 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         onError: (error: any) => {
           const message =
             error?.response?.data?.message || 'Failed to update profile. Please try again.';
-          Alert.alert('Update Failed', message);
+          showError(message);
         },
       }
     );
+  };
+
+  // Allow overlay dismiss only when not mandatory
+  const handleOverlayPress = () => {
+    if (!mandatory) onClose();
   };
 
   return (
@@ -149,9 +168,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       transparent
       animationType="slide"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={mandatory ? undefined : onClose}
     >
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={handleOverlayPress}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalKAV}
@@ -161,7 +180,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* Handle bar */}
             <View style={styles.modalHandle} />
 
-            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <Text style={styles.modalTitle}>
+              {mandatory ? 'Complete Your Profile' : 'Edit Profile'}
+            </Text>
+            {mandatory && (
+              <Text style={styles.mandatoryHint}>
+                Please complete your profile to get started.
+              </Text>
+            )}
 
             {/* Name */}
             <View style={styles.fieldGroup}>
@@ -229,21 +255,56 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               )}
             </TouchableOpacity>
 
-            {/* Cancel */}
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose} disabled={isPending}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+            {/* Cancel — hidden in mandatory mode */}
+            {!mandatory && (
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose} disabled={isPending}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            )}
           </Pressable>
         </KeyboardAvoidingView>
       </Pressable>
+
+      {/* Inline error alert inside the modal */}
+      <AppAlert
+        visible={alertVisible}
+        onClose={() => setAlertVisible(false)}
+        type="error"
+        title="Update Failed"
+        message={alertMessage}
+      />
     </Modal>
   );
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export const ProfileContent: React.FC = () => {
+interface ProfileContentProps {
+  showEditModal?: boolean;
+  isNewUser?: boolean;
+  onModalDismissed?: () => void;
+}
+
+export const ProfileContent: React.FC<ProfileContentProps> = ({
+  showEditModal = false,
+  isNewUser = false,
+  onModalDismissed,
+}) => {
   const logout = useAuthStore(s => s.logout);
+  const navigation = useNavigation<any>();
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+
+  // Auto-open modal when parent requests it (new user profile setup)
+  useEffect(() => {
+    if (showEditModal) {
+      setEditModalVisible(true);
+    }
+  }, [showEditModal]);
+
+  const handleModalClose = () => {
+    setEditModalVisible(false);
+    onModalDismissed?.();
+  };
 
   const {
     data: profile,
@@ -272,16 +333,17 @@ export const ProfileContent: React.FC = () => {
   }, [refetchProfile, refetchStats, refetchLeaderboard]);
 
   const handleLogout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: () => {
-          logout();
-        },
-      },
-    ]);
+    setLogoutConfirmVisible(true);
+  };
+
+  const confirmLogout = () => {
+    setLogoutConfirmVisible(false);
+    logout();
+    // Reset the navigation stack so the user lands on Login
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Login' }],
+    });
   };
 
   if (isLoading) {
@@ -428,11 +490,24 @@ export const ProfileContent: React.FC = () => {
       {/* ── Edit Profile Modal ─────────────────────────────────────────────── */}
       <EditProfileModal
         visible={editModalVisible}
-        onClose={() => setEditModalVisible(false)}
+        onClose={handleModalClose}
         initialName={profile?.name ?? ''}
         initialDepartment={profile?.department ?? ''}
         initialJobRole={profile?.jobRole ?? ''}
         email={profile?.email ?? ''}
+        mandatory={isNewUser}
+      />
+
+      {/* ── Logout Confirm Dialog ──────────────────────────────────────────── */}
+      <AppConfirm
+        visible={logoutConfirmVisible}
+        onCancel={() => setLogoutConfirmVisible(false)}
+        onConfirm={confirmLogout}
+        title="Log out?"
+        message="You will be signed out of your account and returned to the login screen."
+        confirmLabel="Log out"
+        cancelLabel="Stay"
+        confirmStyle="destructive"
       />
     </>
   );
@@ -751,5 +826,13 @@ const styles = StyleSheet.create({
     fontWeight: FONTS.weights.medium,
     fontSize: 14,
     color: COLORS.textBodyText1,
+  },
+  mandatoryHint: {
+    fontFamily: FONTS.family,
+    fontWeight: FONTS.weights.medium,
+    fontSize: 13,
+    color: COLORS.textBodyText1,
+    marginBottom: 20,
+    lineHeight: 18,
   },
 });

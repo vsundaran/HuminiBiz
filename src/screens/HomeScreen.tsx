@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { MomentCard } from '../components/cards/MomentCard';
@@ -18,12 +18,30 @@ import { Shadow } from 'react-native-shadow-2';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 
+type HomeRouteParams = {
+  Home: { openProfileSetup?: boolean } | undefined;
+};
+
 export const HomeScreen = () => {
   const [activeTab, setActiveTab] = useState<Tab>('Home');
+  const [showProfileSetupModal, setShowProfileSetupModal] = useState(false);
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<HomeRouteParams, 'Home'>>();
+
+  // Handle new-user profile setup flow
+  useEffect(() => {
+    if (route.params?.openProfileSetup) {
+      setActiveTab('Profile');
+      setShowProfileSetupModal(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTabPress = (tab: Tab) => {
-    // Switch content in-place — no navigation push
+    // When user manually switches away from Profile, clear the setup modal flag
+    if (tab !== 'Profile') {
+      setShowProfileSetupModal(false);
+    }
     setActiveTab(tab);
   };
 
@@ -171,7 +189,11 @@ export const HomeScreen = () => {
         ) : activeTab === 'Your Moments' ? (
           <YourMomentsContent />
         ) : activeTab === 'Profile' ? (
-          <ProfileContent />
+          <ProfileContent
+            showEditModal={showProfileSetupModal}
+            isNewUser={showProfileSetupModal}
+            onModalDismissed={() => setShowProfileSetupModal(false)}
+          />
         ) : null}
 
         {/* Shared Tab Bar — always at the bottom */}

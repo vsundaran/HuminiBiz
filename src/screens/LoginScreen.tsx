@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -8,6 +8,7 @@ import { HuminiLogo } from '../assets/icons/HuminiLogo';
 import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { useRequestOtp } from '../hooks/useAuth';
+import { AppAlert, AlertType } from '../components/common/AppAlert';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +32,14 @@ export const LoginScreen = () => {
 
   const { mutate: requestOtp, isPending } = useRequestOtp();
 
+  // Custom alert state
+  const [appAlert, setAppAlert] = useState<{ visible: boolean; type: AlertType; title: string; message: string }>({
+    visible: false, type: 'error', title: '', message: '',
+  });
+  const showAlert = (type: AlertType, title: string, message: string) =>
+    setAppAlert({ visible: true, type, title, message });
+  const hideAlert = () => setAppAlert(prev => ({ ...prev, visible: false }));
+
   const handleGetOTP = () => {
     if (!email.trim()) return;
 
@@ -41,8 +50,9 @@ export const LoginScreen = () => {
           navigation.navigate('Otp', { email: email.trim() });
         },
         onError: (error: any) => {
-          Alert.alert(
-            'Error',
+          showAlert(
+            'error',
+            'Request Failed',
             error.response?.data?.message || 'Failed to request OTP. Please try again.'
           );
         },
@@ -54,7 +64,8 @@ export const LoginScreen = () => {
   const isSubmitDisabled = isEmailEmpty || isPending;
 
   return (
-    <AnimatedScreen style={styles.container}>
+    <>
+      <AnimatedScreen style={styles.container}>
       {/* Background Gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -122,6 +133,16 @@ export const LoginScreen = () => {
         </View>
       </SafeAreaView>
     </AnimatedScreen>
+
+      {/* Custom alert */}
+      <AppAlert
+        visible={appAlert.visible}
+        onClose={hideAlert}
+        type={appAlert.type}
+        title={appAlert.title}
+        message={appAlert.message}
+      />
+    </>
   );
 };
 

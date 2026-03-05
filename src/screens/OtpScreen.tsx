@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, Dimensions, TextInput, TouchableOpacity, Text as RNText, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -10,12 +10,13 @@ import { ArrowRightIcon } from '../assets/icons/ArrowRightIcon';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
 import { useRequestOtp, useVerifyOtp } from '../hooks/useAuth';
+import { AppAlert, AlertType } from '../components/common/AppAlert';
 
 const { width } = Dimensions.get('window');
 
 type RootStackParamList = {
   Login: { email?: string } | undefined;
-  Home: undefined;
+  Home: { openProfileSetup?: boolean } | undefined;
   Otp: { email: string };
 };
 
@@ -32,6 +33,14 @@ export const OtpScreen = () => {
 
   const { mutate: verifyOtp, isPending: isVerifying } = useVerifyOtp();
   const { mutate: requestOtp, isPending: isResending } = useRequestOtp();
+
+  // Custom alert state
+  const [appAlert, setAppAlert] = useState<{ visible: boolean; type: AlertType; title: string; message: string }>({
+    visible: false, type: 'error', title: '', message: '',
+  });
+  const showAlert = (type: AlertType, title: string, message: string) =>
+    setAppAlert({ visible: true, type, title, message });
+  const hideAlert = () => setAppAlert(prev => ({ ...prev, visible: false }));
   
   useEffect(() => {
     if (timeLeft > 0) {
@@ -65,14 +74,13 @@ export const OtpScreen = () => {
 
   const handleResend = () => {
     if (isResending) return;
-    
     requestOtp({ email }, {
       onSuccess: () => {
         setTimeLeft(59);
-        Alert.alert('Success', 'A new OTP has been sent to your email.');
+        showAlert('success', 'OTP Sent', 'A new OTP has been sent to your email.');
       },
       onError: (error: any) => {
-        Alert.alert('Error', error.response?.data?.message || 'Failed to resend OTP.');
+        showAlert('error', 'Failed to Resend', error.response?.data?.message || 'Failed to resend OTP.');
       }
     });
   };
@@ -84,11 +92,12 @@ export const OtpScreen = () => {
     verifyOtp(
       { email, otp: otpCode },
       {
-        onSuccess: () => {
-          navigation.navigate('Home');
+        onSuccess: (data: any) => {
+          const isProfileUpdated = data?.data?.user?.isProfileUpdated ?? true;
+          navigation.navigate('Home', { openProfileSetup: !isProfileUpdated });
         },
         onError: (error: any) => {
-          Alert.alert('Error', error.response?.data?.message || 'Invalid OTP. Please try again.');
+          showAlert('error', 'Invalid OTP', error.response?.data?.message || 'Invalid OTP. Please try again.');
         }
       }
     );
@@ -102,7 +111,8 @@ export const OtpScreen = () => {
   const isSubmitDisabled = !isOtpComplete || isVerifying || isResending;
 
   return (
-    <AnimatedScreen style={styles.container}>
+    <>
+      <AnimatedScreen style={styles.container}>
       {/* Background Gradient */}
       <View style={StyleSheet.absoluteFillObject}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -202,6 +212,16 @@ export const OtpScreen = () => {
         </View>
       </SafeAreaView>
     </AnimatedScreen>
+
+      {/* Custom alert */}
+      <AppAlert
+        visible={appAlert.visible}
+        onClose={hideAlert}
+        type={appAlert.type}
+        title={appAlert.title}
+        message={appAlert.message}
+      />
+    </>
   );
 };
 
