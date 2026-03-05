@@ -33,17 +33,17 @@ interface ApiResponse<T> {
 const authService = {
   requestOtp: async (payload: RequestOtpPayload): Promise<ApiResponse<any>> => {
     // The backend route is /api/auth/request-otp. apiClient already has baseURL
-    const response = await apiClient.post<ApiResponse<any>>('/api/auth/request-otp', payload);
+    const response = await apiClient.post<ApiResponse<any>>('/auth/request-otp', payload);
     return response.data;
   },
 
   verifyOtp: async (payload: VerifyOtpPayload): Promise<ApiResponse<AuthResponse>> => {
-    const response = await apiClient.post<ApiResponse<AuthResponse>>('/api/auth/verify-otp', payload);
+    const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/verify-otp', payload);
     return response.data;
   },
   
   logout: async (): Promise<ApiResponse<null>> => {
-    const response = await apiClient.post<ApiResponse<null>>('/api/auth/logout');
+    const response = await apiClient.post<ApiResponse<null>>('/auth/logout');
     return response.data;
   }
 };

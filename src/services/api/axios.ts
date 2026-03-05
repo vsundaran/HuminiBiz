@@ -3,10 +3,10 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useAuthStore } from '../../store/auth.store';
 
 export const apiClient = axios.create({
-  baseURL: 'http://10.0.2.2:3000',
+  baseURL: 'http://10.0.2.2:3000/api',
   timeout: 10000,
 });
 
@@ -17,7 +17,7 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = useAuthStore.getState().token;
+    const token = useAuthStore.getState().accessToken;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -73,7 +73,7 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      useAuthStore.getState().clearToken();
+      useAuthStore.getState().logout();
     }
 
     return Promise.reject(error);
