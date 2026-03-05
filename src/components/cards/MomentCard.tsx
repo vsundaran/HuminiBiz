@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
-import { EventChip, EventType } from '../chips/EventChip';
+import { EventChip } from '../chips/EventChip';
 import { ClockIcon } from '../icons/ClockIcon';
 import { CalendarIcon } from '../icons/CalendarIcon';
 import { HeartFillIcon } from '../icons/HeartFillIcon';
@@ -26,7 +26,8 @@ export type MomentCardProps = {
   momentId?: string;          // Used for like mutation
   userName: string;
   userRole: string;
-  eventType: EventType;
+  categoryName?: string;
+  subcategoryName?: string;
   eventMessage: string;
   dateStr?: string;
   timeStr?: string;
@@ -41,7 +42,8 @@ export const MomentCard: React.FC<MomentCardProps> = ({
   momentId,
   userName,
   userRole,
-  eventType,
+  categoryName,
+  subcategoryName,
   eventMessage,
   dateStr,
   timeStr,
@@ -92,7 +94,7 @@ export const MomentCard: React.FC<MomentCardProps> = ({
       {/* Content section */}
       <View style={styles.contentSection}>
         <View style={styles.chipRow}>
-          <EventChip type={eventType} />
+          <EventChip categoryName={categoryName} subcategoryName={subcategoryName} />
         </View>
         <Text style={styles.messageText}>{eventMessage}</Text>
       </View>

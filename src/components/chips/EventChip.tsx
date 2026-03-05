@@ -1,43 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../theme';
-
-export type EventType = 'NewJoinee' | 'Promotion' | 'Birthday' | 'DeadlineStress' | 'WorkAnniversary';
+import { FONTS } from '../../theme';
+import { CHIP_VISUAL, DEFAULT_CHIP } from '../../theme/categoryColors';
 
 interface EventChipProps {
-  type: EventType;
+  categoryName?: string;
+  subcategoryName?: string;
 }
 
-export const EventChip: React.FC<EventChipProps> = ({ type }) => {
-  let backgroundColor = COLORS.greenBackground;
-  let textColor = COLORS.textGreenDark;
-  let label = '';
+export const EventChip: React.FC<EventChipProps> = ({ categoryName, subcategoryName }) => {
+  const visual = React.useMemo(() => {
+    if (!categoryName) return DEFAULT_CHIP;
+    return CHIP_VISUAL[categoryName] ?? DEFAULT_CHIP;
+  }, [categoryName]);
 
-  switch (type) {
-    case 'NewJoinee':
-      label = 'Wishes | New Joinee';
-      break;
-    case 'Promotion':
-      backgroundColor = COLORS.purpleBackground;
-      textColor = COLORS.textPurpleDark;
-      label = 'Celebration | Promotion';
-      break;
-    case 'Birthday':
-      label = 'Wishes | Birthday';
-      break;
-    case 'WorkAnniversary':
-      label = 'Wishes | Work anniversery';
-      break;
-    case 'DeadlineStress':
-      backgroundColor = COLORS.redBackground;
-      textColor = COLORS.textRedDarkest;
-      label = 'Motivation | Deadline Stress';
-      break;
-  }
+  const label = React.useMemo(() => {
+    if (categoryName && subcategoryName) {
+      return `${categoryName} | ${subcategoryName}`;
+    }
+    return categoryName || subcategoryName || 'Unknown';
+  }, [categoryName, subcategoryName]);
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <Text style={[styles.label, { color: textColor }]}>{label}</Text>
+    <View style={[styles.container, { backgroundColor: visual.bg }]}>
+      <Text style={[styles.label, { color: visual.textColor }]}>{label}</Text>
     </View>
   );
 };

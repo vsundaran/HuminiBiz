@@ -28,6 +28,7 @@ import { Shadow } from 'react-native-shadow-2';
 import { useCategories } from '../hooks/useCategories';
 import { useCreateMoment } from '../hooks/useMoments';
 import { AppAlert } from '../components/common/AppAlert';
+import { CHIP_VISUAL, DEFAULT_CHIP } from '../theme/categoryColors';
 // NOTE: Static SUBCATEGORIES removed — now dynamically fetched from useCategories()
 // Category chip config used only for visual color mapping (not for subcategories)
 // Type alias for backwards compat with remaining CATEGORY_CONFIG references
@@ -136,16 +137,6 @@ export const CreateMomentScreen: React.FC = () => {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { mutate: createMoment, isPending: isSubmitting } = useCreateMoment();
 
-  // Build category chip config dynamically from API data
-  const CHIP_VISUAL: Record<string, { bg: string; selectedBorder: string; textColor: string }> = {
-    Wishes: { bg: '#E3F2D9', selectedBorder: '#486333', textColor: '#486333' },
-    Celebration: { bg: '#FCECFF', selectedBorder: '#5D4D60', textColor: '#5D4D60' },
-    Motivation: { bg: '#FFEAEA', selectedBorder: '#705B5B', textColor: '#705B5B' },
-    Others: { bg: '#F3F3F3', selectedBorder: '#515B60', textColor: '#515B60' },
-  };
-  const DEFAULT_CHIP = { bg: '#EFF3FF', selectedBorder: '#3A5CC7', textColor: '#3A5CC7' };
-
-  // ── Form state ────────────────────────────────────────────────────────────
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<string>('');
   const [description, setDescription] = useState<string>('');

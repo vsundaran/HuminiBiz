@@ -25,6 +25,7 @@ export interface Moment {
   userId: MomentUser;
   categoryId: Category;
   subcategoryId: string;
+  subcategoryName?: string;
   description: string;
   startDateTime: string;       // ISO string
   endDateTime: string;         // ISO string

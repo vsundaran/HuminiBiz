@@ -1,23 +1,5 @@
 import { Moment } from '../types/moment.types';
 import { MomentCardProps } from '../components/cards/MomentCard';
-import { EventType } from '../components/chips/EventChip';
-
-// ─── Map category name → EventChip type ──────────────────────────────────────
-const EVENT_TYPE_MAP: Record<string, EventType> = {
-  'birthday':          'Birthday',
-  'promotion':         'Promotion',
-  'new joinee':        'NewJoinee',
-  'new joiner':        'NewJoinee',
-  'work anniversary':  'WorkAnniversary',
-  'deadline stress':   'DeadlineStress',
-  'deadline':          'DeadlineStress',
-};
-
-export const resolveEventType = (categoryName?: string): EventType => {
-  if (!categoryName) return 'Birthday';
-  const key = categoryName.trim().toLowerCase();
-  return EVENT_TYPE_MAP[key] ?? 'Birthday';
-};
 
 // ─── Format "Ends in X m / X h" for live, or "hh:mm AM/PM" for others ────────
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -68,14 +50,15 @@ export const momentToCardProps = (
   moment: Moment,
   feedType: 'live' | 'upcoming' | 'later'
 ): MomentCardProps => ({
-  momentId:     moment._id,
-  userName:     moment.userId?.name ?? 'Unknown',
-  userRole:     moment.userId?.jobRole ?? '',
-  eventType:    resolveEventType(moment.categoryId?.name),
-  eventMessage: moment.description,
-  timeStr:      formatTimeStr(moment, feedType),
-  dateStr:      formatDateStr(moment, feedType),
-  buttonType:   feedType === 'live' ? 'ShareWishes' : 'NotifyMe',
-  likesCount:   moment.likeCount ?? 0,
-  isLikedByMe:  moment.isLikedByMe ?? false,
+  momentId:        moment._id,
+  userName:        moment.userId?.name ?? 'Unknown',
+  userRole:        moment.userId?.jobRole ?? '',
+  categoryName:    moment.categoryId?.name,
+  subcategoryName: moment.subcategoryName,
+  eventMessage:    moment.description,
+  timeStr:         formatTimeStr(moment, feedType),
+  dateStr:         formatDateStr(moment, feedType),
+  buttonType:      feedType === 'live' ? 'ShareWishes' : 'NotifyMe',
+  likesCount:      moment.likeCount ?? 0,
+  isLikedByMe:     moment.isLikedByMe ?? false,
 });
