@@ -22,7 +22,7 @@ export const EventChip: React.FC<EventChipProps> = ({ categoryName, subcategoryN
   }, [categoryName, subcategoryName]);
 
   return (
-    <View style={[styles.container, { backgroundColor: visual.bg }]}>
+    <View style={[styles.container, { backgroundColor: visual.chipBg }]}>
       <Text style={[styles.label, { color: visual.textColor }]}>{label}</Text>
     </View>
   );

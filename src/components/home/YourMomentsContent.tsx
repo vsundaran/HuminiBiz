@@ -40,6 +40,7 @@ type MomentCardData = {
   dateStr?: string;
   timeRange?: string;
   headerBg: string;
+  cardBg: string;
   titleColor: string;
   subColor: string;
 };
@@ -70,7 +71,6 @@ const CalendarIcon = () => (
 
 import { WishesIcon } from '../icons/WishesIcon';
 import { MotivationIcon } from '../icons/MotivationIcon';
-import { ArchiveBoxIcon } from '../icons/ArchiveBoxIcon';
 
 
 // ─── Category Icon ────────────────────────────────────────────────────────────
@@ -83,7 +83,30 @@ const CategoryIcon = ({ type }: { type: CategoryType }) => {
   const isWishes = type === 'Wishes';
 
   return (
-    <View style={[styles.categoryIconBox, { backgroundColor: visual.bg }]}>
+    <View style={styles.categoryIconBox}>
+      {/* Radial Gradient Background */}
+      <View style={StyleSheet.absoluteFill}>
+        <Svg width="60" height="58">
+          <Defs>
+            <RadialGradient
+              id={`grad-${type}`}
+              cx="50%"
+              cy="50%"
+              rx="50%"
+              ry="50%"
+              fx="50%"
+              fy="50%"
+              gradientUnits="objectBoundingBox"
+            >
+              <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+              <Stop offset="100%" stopColor={visual.bg} stopOpacity="1" />
+            </RadialGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill={`url(#grad-${type})`} />
+        </Svg>
+      </View>
+
+      {/* Icon */}
       {isWishes ? (
         <WishesIcon size={40} color={visual.textColor} />
       ) : (
@@ -92,6 +115,7 @@ const CategoryIcon = ({ type }: { type: CategoryType }) => {
     </View>
   );
 };
+
 
 // ─── Moment Card (Custom tab) ─────────────────────────────────────────────────
 
@@ -103,7 +127,7 @@ type MomentCardProps = {
 };
 
 const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCardProps) => (
-  <AnimatedCard style={styles.card}>
+  <AnimatedCard style={[styles.card]}>
     {/* Header strip */}
     <View style={[styles.cardHeader, { backgroundColor: data.headerBg }]}>
       <View style={styles.cardHeaderLeft}>
@@ -263,6 +287,7 @@ const INITIAL_MOMENTS: MomentCardData[] = [
       'Today is my work anniversary! Feel free to call me and share your wishes or celebrate this moment together.',
     timeStr: 'Ends in 50m',
     headerBg: '#F3FDEC',
+    cardBg: '#E3FFCF',
     titleColor: '#486333',
     subColor: 'rgba(72,99,51,0.9)',
   },
@@ -277,6 +302,7 @@ const INITIAL_MOMENTS: MomentCardData[] = [
     dateStr: '12/3/26',
     timeRange: '11:00AM-12:00PM',
     headerBg: '#FFF3EF',
+    cardBg: '#FFE7E7',
     titleColor: '#804343',
     subColor: 'rgba(128,67,67,0.9)',
   },
@@ -296,6 +322,7 @@ const ARCHIVED_MOMENTS: MomentCardData[] = [
     dateStr: '12/3/26',
     timeRange: '11:00AM-12:00PM',
     headerBg: '#FFF3EF',
+    cardBg: '#FFE7E7',
     titleColor: '#804343',
     subColor: 'rgba(128,67,67,0.9)',
   },
@@ -425,10 +452,10 @@ export const YourMomentsContent: React.FC = () => {
                   timeStr: moment.timeStr,
                   dateStr: moment.dateStr,
                   timeRange: moment.timeRange,
-
-                  headerBg: visual.bg,
+                  headerBg: visual.headerBg,
+                  cardBg: visual.bg,
                   titleColor: visual.textColor,
-                  subColor: visual.textColor + 'CC', // 80% opacity variant
+                  subColor: visual.subTextColor,
                 };
                 return (
                   <AnimatedListItem key={moment.id} index={index}>
@@ -462,9 +489,10 @@ export const YourMomentsContent: React.FC = () => {
                   timeStr: undefined,          // never show "Ends in Xm" in Archive tab
                   dateStr: archiveDateStr,
                   timeRange: archiveTimeRange,
-                  headerBg: visual.bg,
+                  headerBg: visual.headerBg,
+                  cardBg: visual.bg,
                   titleColor: visual.textColor,
-                  subColor: visual.textColor + 'CC',
+                  subColor: visual.subTextColor,
                 };
                 return (
                   <AnimatedListItem key={moment.id} index={index}>
@@ -497,7 +525,7 @@ export const YourMomentsContent: React.FC = () => {
 
 
 const ArchiveMomentCard = React.memo(({ data }: { data: MomentCardData }) => (
-  <AnimatedCard style={styles.card}>
+  <AnimatedCard style={[styles.card]}>
     {/* Header strip */}
     <View style={[styles.cardHeader, { backgroundColor: data.headerBg }]}>
       <View style={styles.cardHeaderLeft}>
@@ -777,6 +805,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     flex: 1,
+    borderRadius: 5
   },
   categoryIconBox: {
     width: 60,
