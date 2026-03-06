@@ -60,11 +60,7 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
         // Immutably update the busyUsers map for the affected user
         setBusyUsers(prev => {
           const next = new Map(prev);
-          if (isInCall) {
-            next.set(userId, true);
-          } else {
-            next.delete(userId);
-          }
+          next.set(userId, isInCall);
           return next;
         });
       }

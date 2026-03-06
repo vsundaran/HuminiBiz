@@ -107,6 +107,7 @@ function App(): React.JSX.Element {
         momentDescription: data.momentDescription ?? '',
         channelName: data.channelName,
         agoraAppId: data.agoraAppId,
+        token: data.token,
       });
 
       // Navigate to IncomingCall — works even if navigator isn't mounted yet
@@ -152,9 +153,13 @@ function App(): React.JSX.Element {
      * Both parties navigate to CallCompletedScreen.
      */
     const offEnded = socketService.on(SOCKET_EVENTS.CALL_ENDED, (_data: any) => {
+      const state = useCallStore.getState();
+      const name = state.activeCall?.receiverName ?? state.incomingCall?.callerName ?? 'Unknown';
+      const role = state.activeCall?.receiverRole ?? state.incomingCall?.callerRole ?? '';
+      
       clearAll();
       if (navigationRef.isReady()) {
-        navigationRef.navigate('CallCompleted');
+        navigationRef.navigate('CallCompleted', { name, role });
       }
     });
 
@@ -163,9 +168,13 @@ function App(): React.JSX.Element {
      * Navigate caller back from RingingScreen to CallCompleted / Home.
      */
     const offMissed = socketService.on(SOCKET_EVENTS.CALL_MISSED, (_data: any) => {
+      const state = useCallStore.getState();
+      const name = state.activeCall?.receiverName ?? state.incomingCall?.callerName ?? 'Unknown';
+      const role = state.activeCall?.receiverRole ?? state.incomingCall?.callerRole ?? '';
+      
       clearAll();
       if (navigationRef.isReady()) {
-        navigationRef.navigate('CallCompleted');
+        navigationRef.navigate('CallCompleted', { name, role });
       }
     });
 

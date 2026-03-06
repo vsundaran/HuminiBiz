@@ -8,9 +8,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { InitialsAvatar } from '../components/common/InitialsAvatar';
 import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
 import { VideoIcon } from '../assets/icons/VideoIcon';
 import { COLORS, FONTS } from '../theme';
@@ -19,17 +20,22 @@ import { Shadow } from 'react-native-shadow-2';
 
 type RootStackParamList = {
   Home: undefined;
-  CallCompleted: undefined;
+  CallCompleted: { name: string; role: string };
   VideoCall: undefined;
   SelectReason: undefined;
 };
 
+type CallCompletedRouteProp = RouteProp<RootStackParamList, 'CallCompleted'>;
+
 export const CallCompletedScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<CallCompletedRouteProp>();
+  
+  const { name = 'Unknown User', role = '' } = route.params || {};
 
   const handleConnectMore = () => {
-    navigation.navigate('VideoCall');
+    navigation.navigate('Home');
   };
 
   const handleGoHome = () => {
@@ -58,12 +64,16 @@ export const CallCompletedScreen = () => {
           <AnimatedView animation="slideUp" delay={100} style={styles.avatarContainer}>
             {/* Glow ring behind avatar */}
             <View style={styles.glowRef}>
-              <AvatarGlowIcon size={200} />
+              <AvatarGlowIcon size={170} />
             </View>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=68' }}
-              style={styles.avatar}
-            />
+            <Shadow
+              distance={10}
+              startColor="rgba(0,0,0,0.15)"
+              offset={[0, 4]}
+              style={{ borderRadius: 60 }}
+            >
+              <InitialsAvatar name={name} size={120} fontSize={40} style={styles.avatar} />
+            </Shadow>
           </AnimatedView>
 
           {/* Call status */}
@@ -73,8 +83,8 @@ export const CallCompletedScreen = () => {
 
           {/* Name & Role */}
           <AnimatedView animation="slideUp" delay={200} style={styles.nameBlock}>
-            <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
-            <Text style={styles.callRole}>Frappe Manager</Text>
+            <Text style={styles.callerName}>{name}</Text>
+            {!!role && <Text style={styles.callRole}>{role}</Text>}
           </AnimatedView>
         </View>
 
@@ -82,20 +92,20 @@ export const CallCompletedScreen = () => {
         <AnimatedView animation="slideUp" delay={300} style={styles.bottomWrapper}>
           <View style={styles.actionsContainer}>
             {/* Connect more — dark primary button with inner shadow */}
-            <Shadow
+            {/* <Shadow
               distance={6}
               startColor="rgba(72,86,92,0.29)"
               offset={[0, 4]}
               style={{ width: '100%', borderRadius: 10 }}
               containerStyle={{ width: '100%' }}
-            >
+            > */}
               <AnimatedPressable
                 style={styles.connectMoreButton}
                 onPress={handleConnectMore}>
                 {/* <VideoIcon size={20} color={COLORS.white} /> */}
                 <Text style={styles.connectMoreText}>Connect more</Text>
               </AnimatedPressable>
-            </Shadow>
+            {/* </Shadow> */}
 
             {/* Report — light red button */}
             <AnimatedPressable

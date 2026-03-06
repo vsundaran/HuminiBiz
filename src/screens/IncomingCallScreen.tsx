@@ -225,12 +225,20 @@ export const IncomingCallScreen: React.FC = () => {
     if (!incomingCall || isAccepting) { return; }
     setIsAccepting(true);
     try {
-      await updateCallStatus(incomingCall.callId, 'accepted');
+      const response = await updateCallStatus(incomingCall.callId, 'accepted');
+      // Save the token and connection details for Agora on the receiver side
+      setIncomingCall({
+        ...incomingCall,
+        token: response.token || '',
+        channelName: response.channelName,
+        agoraAppId: response.agoraAppId || incomingCall.agoraAppId,
+      });
+
       navigation.replace('VideoCall');
     } catch {
       setIsAccepting(false);
     }
-  }, [incomingCall, isAccepting, navigation]);
+  }, [incomingCall, isAccepting, navigation, setIncomingCall]);
 
   const handleDecline = useCallback(async () => {
     if (!incomingCall) {

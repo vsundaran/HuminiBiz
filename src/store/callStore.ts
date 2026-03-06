@@ -18,6 +18,7 @@ export interface IncomingCallData {
   momentDescription?: string;
   channelName: string;
   agoraAppId: string;
+  token: string;
 }
 
 // ─── Active (outgoing) call data (set when caller initiates) ──────────────────

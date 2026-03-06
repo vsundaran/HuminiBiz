@@ -212,6 +212,19 @@ class SocketService {
     this.socket.on('disconnect', (reason: string) => {
       console.log(`[SocketService] Disconnected: ${reason}`);
       setConnected(false);
+
+      const { useCallStore } = require('../../store/callStore');
+      const { navigationRef } = require('../../../App');
+      const store = useCallStore.getState();
+
+      if (store.activeCall || store.incomingCall) {
+        console.log(`[SocketService] Connection dropped during an active call. Cleaning up.`);
+        store.clearAll();
+        
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('CallCompleted');
+        }
+      }
     });
 
     // ── Reconnecting ──────────────────────────────────────────────────────

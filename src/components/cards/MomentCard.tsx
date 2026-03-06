@@ -178,7 +178,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
           style={{ width: '100%', borderRadius: 10 }}
           containerStyle={{ flex: 1, marginRight: 10 }}
         > */}
-          <AnimatedPressable 
+
+        {
+          !(isInCall || isCalling) ?  <AnimatedPressable 
             style={[
               styles.mainButton, 
               buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
@@ -204,7 +206,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
                 )}
               </>
             )}
-          </AnimatedPressable>
+          </AnimatedPressable> : null
+        }
+         
         {/* </Shadow> */}
         
         <AnimatedPressable style={styles.likeButtonContainer} onPress={handleLike}>
