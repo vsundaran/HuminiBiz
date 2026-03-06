@@ -32,6 +32,7 @@ export interface Moment {
   active: boolean;
   likeCount: number;
   isLikedByMe: boolean;
+  isInCall?: boolean;          // true if the moment creator is currently in an active call
   createdAt: string;
   updatedAt: string;
 }

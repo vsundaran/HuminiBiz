@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,31 +19,80 @@ import { SkeletonLoader } from '../components/common/SkeletonLoader';
 import { useLiveMoments, useUpcomingMoments, useLaterMoments } from '../hooks/useMoments';
 import { momentToCardProps } from '../utils/momentMapper';
 import { Moment, PaginatedMoments } from '../types/moment.types';
+import { socketService } from '../services/socket/socketService';
+import { SOCKET_EVENTS } from '../services/socket/events';
 
 type Tab = 'Home' | 'Your Moments' | 'Profile';
 type HomeRouteParams = {
   Home: { openProfileSetup?: boolean } | undefined;
 };
 
+// Payload emitted by server on USER_CALL_STATUS_CHANGED
+interface CallStatusPayload {
+  userId: string;
+  organizationId: string;
+  isInCall: boolean;
+}
+
 // ─── Home Tab Content ─────────────────────────────────────────────────────────
 /**
- * Extracted to avoid calling hooks conditionally inside HomeScreen JSX.
- * Fetches 3 cards per section from the real API.
+ * Fetches 3 cards per section and subscribes to real-time call status changes.
+ * When a live moment creator becomes busy/free, the card updates instantly via WebSocket.
  */
 const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
+
+  // Real-time map: userId → isInCall (updated by WebSocket events)
+  // Using a ref-backed state to avoid stale closures in the socket callback
+  const [busyUsers, setBusyUsers] = useState<Map<string, boolean>>(new Map());
+  const busyUsersRef = useRef<Map<string, boolean>>(busyUsers);
+  busyUsersRef.current = busyUsers;
+
   const { data: live, isLoading: loadingLive, refetch: refetchLive } = useLiveMoments({ limit: 3 });
   const { data: upcoming, isLoading: loadingUpcoming, refetch: refetchUpcoming } = useUpcomingMoments({ limit: 3 });
   const { data: later, isLoading: loadingLater, refetch: refetchLater } = useLaterMoments({ limit: 3 });
 
-  const onRefresh = React.useCallback(async () => {
+  // ── WebSocket: Listen for real-time call status changes ──────────────────
+  useEffect(() => {
+    const cleanup = socketService.on<CallStatusPayload>(
+      SOCKET_EVENTS.USER_CALL_STATUS_CHANGED,
+      ({ userId, isInCall }) => {
+        // Immutably update the busyUsers map for the affected user
+        setBusyUsers(prev => {
+          const next = new Map(prev);
+          if (isInCall) {
+            next.set(userId, true);
+          } else {
+            next.delete(userId);
+          }
+          return next;
+        });
+      }
+    );
+
+    // Seed busyUsers from initial API data when live moments load
+    // (covers the case where a user was already in a call before we subscribed)
+    if (live?.moments) {
+      const seedMap = new Map<string, boolean>();
+      live.moments.forEach(m => {
+        const creatorId = m.userId?._id;
+        if (creatorId && m.isInCall) {
+          seedMap.set(creatorId, true);
+        }
+      });
+      if (seedMap.size > 0) {
+        setBusyUsers(prev => new Map([...prev, ...seedMap]));
+      }
+    }
+
+    return cleanup;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live?.moments]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refetchLive(),
-        refetchUpcoming(),
-        refetchLater()
-      ]);
+      await Promise.all([refetchLive(), refetchUpcoming(), refetchLater()]);
     } finally {
       setRefreshing(false);
     }
@@ -70,10 +119,22 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
         </AnimatedView>
       );
     }
-    return moments.map((m) => (
-      <MomentCard key={m._id} {...momentToCardProps(m, feedType)} />
-    ));
+    return moments.map((m: Moment) => {
+      // For live moments: real-time override from WebSocket; otherwise use API value
+      const creatorId = m.userId?._id;
+      const isInCallOverride = feedType === 'live' && creatorId
+        ? busyUsers.get(creatorId) ?? m.isInCall ?? false
+        : undefined;
+
+      return (
+        <MomentCard
+          key={m._id}
+          {...momentToCardProps(m, feedType, isInCallOverride)}
+        />
+      );
+    });
   };
+
 
   return (
     <>
@@ -100,14 +161,17 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(live, 'live', loadingLive)}
 
-          <AnimatedView animation="slideUp" delay={100}>
+          {
+            (live?.totalCount ?? 0) > 3 ? 
+            <AnimatedView animation="slideUp" delay={100}>
             {!loadingLive && (live?.totalCount ?? 0) > 0 && (
               <ViewAllButton
                 label={`View All (${live!.totalCount})`}
                 onPress={() => navigation.navigate('ListMoments', { feedType: 'live' })}
             />
           )}
-          </AnimatedView>
+          </AnimatedView> : null
+        }
         </View>
 
         {/* ── In Next 2h ──────────────────────────────────────────────────── */}
@@ -118,7 +182,9 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(upcoming, 'upcoming', loadingUpcoming)}
 
-          <AnimatedView animation="slideUp" delay={200}>
+{
+  (upcoming?.totalCount ?? 0) > 3 ? 
+    <AnimatedView animation="slideUp" delay={200}>
             {!loadingUpcoming && (upcoming?.totalCount ?? 0) > 0 && (
               <ViewAllButton
                 label={`View All (${upcoming!.totalCount})`}
@@ -126,7 +192,10 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
             />
 
           )}
-          </AnimatedView>
+          </AnimatedView> : null
+  
+}
+          
         </View>
 
         {/* ── Others (later) ──────────────────────────────────────────────── */}
@@ -137,15 +206,18 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           {renderSectionCards(later, 'later', loadingLater)}
 
-          <AnimatedView animation="slideUp" delay={200}>
+            {
+            (later?.totalCount ?? 0) > 3 ? 
+            <AnimatedView animation="slideUp" delay={200}>
           {!loadingLater && (later?.totalCount ?? 0) > 0 && (
             <ViewAllButton
               label={`View All (${later!.totalCount})`}
               onPress={() => navigation.navigate('ListMoments', { feedType: 'later' })}
             />
           )}
-          </AnimatedView>
-        </View>
+          </AnimatedView> : null
+        }
+        </View> 
 
         <View style={styles.bottomSpacer} />
       </ScrollView>

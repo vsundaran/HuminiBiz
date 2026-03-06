@@ -48,17 +48,35 @@ export const formatDateStr = (moment: Moment, feedType: 'live' | 'upcoming' | 'l
 // ─── Master mapper: API Moment → MomentCard props ────────────────────────────
 export const momentToCardProps = (
   moment: Moment,
-  feedType: 'live' | 'upcoming' | 'later'
-): MomentCardProps => ({
-  momentId:        moment._id,
-  userName:        moment.userId?.name ?? 'Unknown',
-  userRole:        moment.userId?.jobRole ?? '',
-  categoryName:    moment.categoryId?.name,
-  subcategoryName: moment.subcategoryName,
-  eventMessage:    moment.description,
-  timeStr:         formatTimeStr(moment, feedType),
-  dateStr:         formatDateStr(moment, feedType),
-  buttonType:      feedType === 'live' ? 'ShareWishes' : 'NotifyMe',
-  likesCount:      moment.likeCount ?? 0,
-  isLikedByMe:     moment.isLikedByMe ?? false,
-});
+  feedType: 'live' | 'upcoming' | 'later',
+  isInCall?: boolean, // Optionally override with real-time socket state
+): MomentCardProps => {
+  // Extract the creator's user ID — userId can be a populated object or a plain string/ObjectId
+  const userObj = moment.userId;
+  const receiverId = userObj?._id
+    ? String(userObj._id)
+    : typeof userObj === 'string'
+      ? userObj
+      : '';
+
+  return {
+    momentId:        moment._id,
+    // ── Call target info (creator = person being called) ──
+    receiverId,
+    receiverName:    userObj?.name ?? 'Unknown',
+    receiverRole:    userObj?.jobRole ?? '',
+    // ── Display info ──────────────────────────────────────
+    userName:        userObj?.name ?? 'Unknown',
+    userRole:        userObj?.jobRole ?? '',
+    categoryName:    moment.categoryId?.name,
+    subcategoryName: moment.subcategoryName,
+    eventMessage:    moment.description,
+    timeStr:         formatTimeStr(moment, feedType),
+    dateStr:         formatDateStr(moment, feedType),
+    buttonType:      feedType === 'live' ? 'ShareWishes' : 'NotifyMe',
+    likesCount:      moment.likeCount ?? 0,
+    isLikedByMe:     moment.isLikedByMe ?? false,
+    // Real-time override takes priority; fall back to API value from initial load
+    isInCall:        isInCall !== undefined ? isInCall : (moment.isInCall ?? false),
+  };
+};

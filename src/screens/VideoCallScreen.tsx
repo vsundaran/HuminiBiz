@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Text, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
@@ -10,31 +10,70 @@ import { VolumeHighGreyIcon } from '../assets/icons/VolumeHighGreyIcon';
 import { MicrophoneIcon } from '../assets/icons/MicrophoneIcon';
 import { VideoCameraIcon } from '../assets/icons/VideoCameraIcon';
 import { RotateCameraIcon } from '../assets/icons/RotateCameraIcon';
-// @ts-ignore Let's handle RootStackParamList locally here or by type
-import { RootStackParamList } from '../components/cards/MomentCard';
 
 import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { useCallStore } from '../store/callStore';
+import { updateCallStatus } from '../services/call.service';
 
-const { width, height } = Dimensions.get('window');
+type RootStackParamList = {
+  Home: undefined;
+  Ringing: undefined;
+  VideoCall: undefined;
+  CallCompleted: undefined;
+};
+
+const { width } = Dimensions.get('window');
 
 export const VideoCallScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const handleEndCall = () => {
+  // ── Call store ─────────────────────────────────────────────────────────────
+  const activeCall = useCallStore((s) => s.activeCall);
+  const incomingCall = useCallStore((s) => s.incomingCall);
+  const clearAll = useCallStore((s) => s.clearAll);
+
+  // Determine which side we are: caller (activeCall) or callee (incomingCall)
+  const callId = activeCall?.callId ?? incomingCall?.callId ?? '';
+  const displayName = activeCall?.receiverName ?? incomingCall?.callerName ?? 'Unknown';
+  const displayRole = activeCall?.receiverRole ?? incomingCall?.callerRole ?? '';
+
+  // ── Call timer ─────────────────────────────────────────────────────────────
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => {
+      if (timerRef.current) { clearInterval(timerRef.current); }
+    };
+  }, []);
+
+  const formatTime = useCallback((seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }, []);
+
+  // ── End call ────────────────────────────────────────────────────────────────
+  const handleEndCall = useCallback(async () => {
+    if (timerRef.current) { clearInterval(timerRef.current); }
+    if (callId) {
+      try {
+        await updateCallStatus(callId, 'ended');
+      } catch {
+        // Best-effort — navigate regardless
+      }
+    }
+    clearAll();
     navigation.replace('CallCompleted');
-  };
+  }, [callId, clearAll, navigation]);
 
   return (
     <AnimatedScreen style={styles.container}>
-      {/* Full Screen Background Video/Image */}
-      {/* <Image
-        source={{ uri: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?auto=format&fit=crop&q=80&w=1000' }}
-        style={StyleSheet.absoluteFillObject}
-        resizeMode="cover"
-      /> */}
-
       {/* Top Gradient for Text Readability */}
       <View style={styles.topGradient}>
         <Svg height="100%" width="100%" preserveAspectRatio="none">
@@ -64,14 +103,14 @@ export const VideoCallScreen = () => {
       </View>
 
       <SafeAreaView style={styles.safeArea}>
-        {/* Header section */}
+        {/* Header */}
         <AnimatedView animation="slideDown" style={styles.header}>
-          <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
-          <Text style={styles.callRole}>Frappe Manager</Text>
+          <Text style={styles.callerName}>{displayName}</Text>
+          {!!displayRole && <Text style={styles.callRole}>{displayRole}</Text>}
         </AnimatedView>
 
-        {/* Small floating video view (Local user) */}
-        <AnimatedView animation="scale" delay={300} style={{ position: 'absolute', top: 190, right: 20 }}>
+        {/* Local video placeholder (top-right PiP) */}
+        <AnimatedView animation="scale" delay={300} style={styles.localVideoWrapper}>
           <Shadow
             distance={5}
             startColor="rgba(0,0,0,0.3)"
@@ -79,48 +118,42 @@ export const VideoCallScreen = () => {
             style={styles.localVideoContainer}
           >
             <View />
-            {/* <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=11' }}
-              style={styles.localVideo}
-            /> */}
           </Shadow>
         </AnimatedView>
 
         <AnimatedView animation="slideUp" delay={100} style={styles.bottomSection}>
           {/* Timer */}
           <View style={styles.timerPill}>
-            <Text style={styles.timerText}>00:30</Text>
+            <Text style={styles.timerText}>{formatTime(elapsedSeconds)}</Text>
           </View>
 
-          {/* Call Controls Box */}
+          {/* Call Controls */}
           <View style={styles.controlsBar}>
-            {/* Rotate Camera */}
             <AnimatedPressable style={styles.iconBtnWhite}>
               <RotateCameraIcon size={24} color="#263238" />
             </AnimatedPressable>
 
-            {/* Volume */}
             <AnimatedPressable style={styles.iconBtnTranslucent}>
               <VolumeHighGreyIcon size={24} />
             </AnimatedPressable>
 
-            {/* Video */}
             <AnimatedPressable style={styles.iconBtnWhite}>
               <VideoCameraIcon size={24} color="#263238" />
             </AnimatedPressable>
 
-            {/* Microphone */}
             <AnimatedPressable style={styles.iconBtnWhite}>
               <MicrophoneIcon size={24} color="#263238" />
             </AnimatedPressable>
 
             {/* End Call */}
-            <AnimatedPressable 
-              style={styles.endCallBtn} 
-              onPress={handleEndCall}
-            >
+            <AnimatedPressable style={styles.endCallBtn} onPress={handleEndCall}>
               <View style={styles.declineIconWrapper}>
-                <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
+                <Svg
+                  height="100%"
+                  width="100%"
+                  preserveAspectRatio="none"
+                  style={StyleSheet.absoluteFillObject}
+                >
                   <Defs>
                     <LinearGradient id="red-gradient" x1="0" y1="0" x2="0" y2="1">
                       <Stop offset="0" stopColor="#FF5C5C" stopOpacity="1" />
@@ -165,9 +198,6 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginTop: 10,
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 3,
   },
   callerName: {
     fontFamily: FONTS.styles.headlineBold24.fontFamily,
@@ -175,6 +205,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.15,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 3,
   },
   callRole: {
     fontFamily: FONTS.styles.bodyMedium14.fontFamily,
@@ -183,6 +216,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 4,
   },
+  localVideoWrapper: {
+    position: 'absolute',
+    top: 190,
+    right: 20,
+  },
   localVideoContainer: {
     width: 120,
     height: 160,
@@ -190,10 +228,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  localVideo: {
-    width: '100%',
-    height: '100%',
+    backgroundColor: '#1a1a1a',
   },
   bottomSection: {
     alignItems: 'center',

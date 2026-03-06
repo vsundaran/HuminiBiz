@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { COLORS, FONTS } from '../../theme';
 import { EventChip } from '../chips/EventChip';
 import { ClockIcon } from '../icons/ClockIcon';
@@ -14,6 +14,8 @@ import { AnimatedCard, AnimatedPressable, AnimatedView } from '../animated';
 import { Shadow } from 'react-native-shadow-2';
 import { InitialsAvatar } from '../common/InitialsAvatar';
 import { useToggleLike } from '../../hooks/useMoments';
+import { useCallStore } from '../../store/callStore';
+import { initiateCall } from '../../services/call.service';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -23,7 +25,13 @@ export type RootStackParamList = {
 };
 
 export type MomentCardProps = {
-  momentId?: string;          // Used for like mutation
+  momentId?: string;
+  /** ID of the moment creator (the user to call) */
+  receiverId?: string;
+  /** Name displayed on RingingScreen */
+  receiverName?: string;
+  /** Role displayed on RingingScreen */
+  receiverRole?: string;
   userName: string;
   userRole: string;
   categoryName?: string;
@@ -40,6 +48,9 @@ export type MomentCardProps = {
 
 export const MomentCard: React.FC<MomentCardProps> = ({
   momentId,
+  receiverId,
+  receiverName,
+  receiverRole,
   userName,
   userRole,
   categoryName,
@@ -55,7 +66,9 @@ export const MomentCard: React.FC<MomentCardProps> = ({
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [localLiked, setLocalLiked] = useState(isLikedByMe);
   const [localCount, setLocalCount] = useState(likesCount);
+  const [isCalling, setIsCalling] = useState(false);
   const { mutate: toggleLikeMutate } = useToggleLike();
+  const setActiveCall = useCallStore((s) => s.setActiveCall);
 
   const handleLike = () => {
     if (!momentId) { return; }
@@ -68,6 +81,32 @@ export const MomentCard: React.FC<MomentCardProps> = ({
         setLocalCount(likesCount);
       },
     });
+  };
+
+  const handleCallPress = async () => {
+    if (!momentId || !receiverId || isCalling || isInCall) { return; }
+    setIsCalling(true);
+    try {
+      const result = await initiateCall(receiverId, momentId);
+      setActiveCall({
+        callId: result.call._id,
+        receiverId,
+        receiverName: receiverName ?? userName,
+        receiverRole: receiverRole ?? userRole,
+        momentId,
+        categoryName,
+        subcategoryName,
+        momentDescription: eventMessage,
+        channelName: result.channelName,
+        token: result.token,
+        agoraAppId: result.agoraAppId,
+      });
+      navigation.navigate('Ringing');
+    } catch {
+      // Error handled by the API interceptor / global error boundary
+    } finally {
+      setIsCalling(false);
+    }
   };
 
   return (
@@ -143,23 +182,27 @@ export const MomentCard: React.FC<MomentCardProps> = ({
             style={[
               styles.mainButton, 
               buttonType === 'NotifyMe' ? styles.notifyButton : styles.wishesButton,
-              isInCall && styles.disabledButton
+              (isInCall || isCalling) && styles.disabledButton
             ]}
-            disabled={isInCall}
-            onPress={() => {
-              navigation.navigate('Ringing');
-            }}
+            disabled={isInCall || isCalling || !receiverId}
+            onPress={buttonType === 'ShareWishes' ? handleCallPress : undefined}
           >
-            <Text style={[
-              buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,
-              isInCall && styles.disabledButtonText
-            ]}>
-              {buttonType === 'NotifyMe' ? 'Notify me' : 'Share Your Wishes'}
-            </Text>
-            {buttonType === 'NotifyMe' ? (
-              <BellIcon size={20} color={COLORS.primary} />
+            {isCalling ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
             ) : (
-              <VideoOutlineIcon size={20} color={isInCall ? '#9b9b9b' : COLORS.white} />
+              <>
+                <Text style={[
+                  buttonType === 'NotifyMe' ? styles.notifyButtonText : styles.wishesButtonText,
+                  (isInCall || isCalling) && styles.disabledButtonText
+                ]}>
+                  {buttonType === 'NotifyMe' ? 'Notify me' : 'Share Your Wishes'}
+                </Text>
+                {buttonType === 'NotifyMe' ? (
+                  <BellIcon size={20} color={COLORS.primary} />
+                ) : (
+                  <VideoOutlineIcon size={20} color={(isInCall || isCalling) ? '#9b9b9b' : COLORS.white} />
+                )}
+              </>
             )}
           </AnimatedPressable>
         {/* </Shadow> */}

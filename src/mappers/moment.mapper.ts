@@ -53,6 +53,10 @@ function formatDate(dateString: string): string {
 
 export interface MomentCardUIData {
   momentId: string;
+  /** The ID of the user who created this moment (used as receiverId for calls) */
+  receiverId: string;
+  receiverName: string;
+  receiverRole: string;
   userName: string;
   userRole: string;
   eventType: string;
@@ -74,13 +78,19 @@ export function mapLiveMoment(moment: Moment): MomentCardUIData {
     ? (moment.categoryId as any).subcategories?.find?.((s: any) => s._id?.toString() === moment.subcategoryId)?.name
     : undefined;
 
-  // Use subcategory as event type by normalizing the string
   const eventType = subcategoryName
     ? subcategoryName.replace(/\s+/g, '')
     : (typeof moment.categoryId === 'object' ? (moment.categoryId as any).name : 'General');
 
+  const userId = typeof user === 'object' && user !== null
+    ? String((user as any)?._id ?? '')
+    : String(user ?? '');
+
   return {
     momentId: moment._id,
+    receiverId: userId,
+    receiverName: user?.name ?? 'Unknown',
+    receiverRole: user?.jobRole ?? '',
     userName: user?.name ?? 'Unknown',
     userRole: user?.jobRole ?? '',
     eventType,
@@ -104,8 +114,15 @@ export function mapUpcomingMoment(moment: Moment): MomentCardUIData {
     ? subcategoryName.replace(/\s+/g, '')
     : (typeof moment.categoryId === 'object' ? (moment.categoryId as any).name : 'General');
 
+  const userId = typeof user === 'object' && user !== null
+    ? String((user as any)?._id ?? '')
+    : String(user ?? '');
+
   return {
     momentId: moment._id,
+    receiverId: userId,
+    receiverName: user?.name ?? 'Unknown',
+    receiverRole: user?.jobRole ?? '',
     userName: user?.name ?? 'Unknown',
     userRole: user?.jobRole ?? '',
     eventType,

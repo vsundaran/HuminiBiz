@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import Animated, {
@@ -7,7 +7,6 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  Easing,
   withSequence,
   withDelay,
 } from 'react-native-reanimated';
@@ -19,9 +18,14 @@ import { VolumeHighGreyIcon } from '../assets/icons/VolumeHighGreyIcon';
 import { AvatarGlowIcon } from '../assets/icons/AvatarGlowIcon';
 import { PhoneIcon } from '../assets/icons/PhoneIcon';
 import { ArrowLeftLineIcon } from '../assets/icons/ArrowLeftLineIcon';
-import { COLORS, FONTS, SIZES } from '../theme';
+import { COLORS, FONTS } from '../theme';
 import { AnimatedScreen, AnimatedView, AnimatedPressable } from '../components/animated';
 import { Shadow } from 'react-native-shadow-2';
+import { InitialsAvatar } from '../components/common/InitialsAvatar';
+import { EventChip } from '../components/chips/EventChip';
+
+import { useCallStore } from '../store/callStore';
+import { initiateCall, updateCallStatus } from '../services/call.service';
 
 type RootStackParamList = {
   Home: undefined;
@@ -29,6 +33,7 @@ type RootStackParamList = {
   VideoCall: undefined;
 };
 
+// ─── Animated ringing dot ─────────────────────────────────────────────────────
 const Dot = ({ delay = 0 }: { delay: number }) => {
   const opacity = useSharedValue(0.3);
 
@@ -38,36 +43,86 @@ const Dot = ({ delay = 0 }: { delay: number }) => {
         delay,
         withSequence(
           withTiming(1, { duration: 400 }),
-          withTiming(0.3, { duration: 400 })
-        )
+          withTiming(0.3, { duration: 400 }),
+        ),
       ),
       -1,
-      false
+      false,
     );
   }, [delay, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
   return <Animated.View style={[styles.dot, animatedStyle]} />;
 };
 
 export const RingingScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // ── Call store ───────────────────────────────────────────────────────────────
+  const activeCall = useCallStore((s) => s.activeCall);
+  const wasDeclinedByCallee = useCallStore((s) => s.wasDeclinedByCallee);
+  const setActiveCall = useCallStore((s) => s.setActiveCall);
+  const setWasDeclinedByCallee = useCallStore((s) => s.setWasDeclinedByCallee);
+  const clearAll = useCallStore((s) => s.clearAll);
+
+  const receiverName = activeCall?.receiverName ?? 'Unknown';
+  const receiverRole = activeCall?.receiverRole ?? '';
+  const momentDescription = activeCall?.momentDescription ?? '';
+
+  // Local "declined" mirrors the store flag so UI reacts immediately
   const [isDeclined, setIsDeclined] = useState(false);
 
-  const handleDecline = () => {
-    setIsDeclined(true);
-  };
+  // When App.tsx socket listener sets wasDeclinedByCallee, sync local state
+  useEffect(() => {
+    if (wasDeclinedByCallee) {
+      setIsDeclined(true);
+      // Reset the store flag so it doesn't persist
+      setWasDeclinedByCallee(false);
+    }
+  }, [wasDeclinedByCallee, setWasDeclinedByCallee]);
 
-  const handleBack = () => {
+  // ── Caller declines (cancels outgoing call) ──────────────────────────────────
+  const handleDecline = useCallback(async () => {
+    if (!activeCall) {
+      setIsDeclined(true);
+      return;
+    }
+    try {
+      await updateCallStatus(activeCall.callId, 'declined');
+    } finally {
+      setIsDeclined(true);
+    }
+  }, [activeCall]);
+
+  // ── Navigate back to Home ────────────────────────────────────────────────────
+  const handleBack = useCallback(() => {
+    clearAll();
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
       navigation.replace('Home');
     }
-  };
+  }, [clearAll, navigation]);
+
+  // ── Call Again — re-initiate call with same receiver & moment ────────────────
+  const handleCallAgain = useCallback(async () => {
+    if (!activeCall) { return; }
+    try {
+      const result = await initiateCall(activeCall.receiverId, activeCall.momentId);
+      setActiveCall({
+        ...activeCall,
+        callId: result.call._id,
+        token: result.token,
+        channelName: result.channelName,
+        agoraAppId: result.agoraAppId,
+      });
+      setIsDeclined(false);
+      setWasDeclinedByCallee(false);
+    } catch {
+      // Silently fail — user can try again
+    }
+  }, [activeCall, setActiveCall, setWasDeclinedByCallee]);
 
   return (
     <AnimatedScreen style={styles.container}>
@@ -92,17 +147,22 @@ export const RingingScreen = () => {
             <View style={styles.glowRef}>
               <AvatarGlowIcon size={200} />
             </View>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/300?img=68' }} // Adjust as needed
-              style={styles.avatar}
+            {/* InitialsAvatar replaces photo as per requirements */}
+            <InitialsAvatar
+              name={receiverName}
+              size={140}
+              fontSize={48}
+              style={styles.avatarInitials}
             />
           </AnimatedView>
 
-          <Text style={styles.callerName}>Gnani Gnanasekaran</Text>
-          <Text style={styles.callRole}>Frappe Manager</Text>
+          <Text style={styles.callerName}>{receiverName}</Text>
+          {!!receiverRole && <Text style={styles.callRole}>{receiverRole}</Text>}
+          
+          
         </View>
 
-        {/* Ringing text and animating dots */}
+        {/* Ringing indicator */}
         <View style={styles.ringingIndicator}>
           {isDeclined ? (
             <Text style={styles.didNotPickText}>Did not pick</Text>
@@ -119,26 +179,30 @@ export const RingingScreen = () => {
           )}
         </View>
 
-        {/* Context Card Card */}
-        <AnimatedView animation="slideUp" delay={200} style={{ width: '85%', maxWidth: 340 }}>
-          <Shadow
-            distance={8}
-            startColor="#0000000A"
-            offset={[0, 8]}
-            style={styles.messageCard}
-            containerStyle={{ width: '100%' }}
-          >
-            <View style={styles.chip}>
-              <Text style={styles.chipText}>Wishes | Work anniversary</Text>
+        {/* Moment Context Card */}
+        {!!momentDescription && (
+          <AnimatedView animation="slideUp" delay={200} style={{ width: '85%', maxWidth: 340 }}>
+            <Shadow
+              distance={8}
+              startColor="#0000000A"
+              offset={[0, 8]}
+              style={styles.messageCard}
+              containerStyle={{ width: '100%' }}
+            >
+              {(!!activeCall?.categoryName || !!activeCall?.subcategoryName) && (
+            <View style={{marginBottom: 12}}>
+              <EventChip 
+                categoryName={activeCall?.categoryName} 
+                subcategoryName={activeCall?.subcategoryName} 
+              />
             </View>
-            <Text style={styles.messageText}>
-              Today is my work anniversary! Feel free to call me and share your wishes or
-              celebrate this moment together.
-            </Text>
-          </Shadow>
-        </AnimatedView>
+          )}
+              <Text style={styles.messageText}>{momentDescription}</Text>
+            </Shadow>
+          </AnimatedView>
+        )}
 
-        {/* Bottom Section / Actions */}
+        {/* Bottom Actions */}
         <AnimatedView animation="slideUp" delay={300} style={styles.actionsPillContainer}>
           {isDeclined ? (
             <View style={styles.declinedActionsContainer}>
@@ -154,9 +218,14 @@ export const RingingScreen = () => {
 
               {/* Call Again Button */}
               <View style={styles.declinedActionWrapper}>
-                <AnimatedPressable style={styles.callAgainOuter} onPress={()=> navigation.navigate("VideoCall")}>
+                <AnimatedPressable style={styles.callAgainOuter} onPress={handleCallAgain}>
                   <View style={styles.callAgainInner}>
-                    <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
+                    <Svg
+                      height="100%"
+                      width="100%"
+                      preserveAspectRatio="none"
+                      style={StyleSheet.absoluteFillObject}
+                    >
                       <Defs>
                         <LinearGradient id="call-again-gradient" x1="0" y1="0" x2="1" y2="1">
                           <Stop offset="0.14" stopColor="#A6FF6A" stopOpacity="1" />
@@ -173,18 +242,23 @@ export const RingingScreen = () => {
             </View>
           ) : (
             <View style={styles.actionsPill}>
-              {/* Volume Button */}
+              {/* Volume Button (placeholder — mute will be on VideoCall) */}
               <AnimatedPressable style={styles.greyButton}>
                 <VolumeHighGreyIcon size={24} />
               </AnimatedPressable>
 
               {/* Decline Button */}
-              <AnimatedPressable 
-                style={styles.declineButton} 
+              <AnimatedPressable
+                style={styles.declineButton}
                 onPress={handleDecline}
               >
                 <View style={styles.declineIconWrapper}>
-                  <Svg height="100%" width="100%" preserveAspectRatio="none" style={StyleSheet.absoluteFillObject}>
+                  <Svg
+                    height="100%"
+                    width="100%"
+                    preserveAspectRatio="none"
+                    style={StyleSheet.absoluteFillObject}
+                  >
                     <Defs>
                       <LinearGradient id="red-gradient" x1="0" y1="0" x2="0" y2="1">
                         <Stop offset="0" stopColor="#FF5C5C" stopOpacity="1" />
@@ -205,14 +279,12 @@ export const RingingScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   safeArea: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 82, // Matches top of avatar
+    paddingTop: 82,
   },
   profileSection: {
     alignItems: 'center',
@@ -236,10 +308,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 0,
   },
-  avatar: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+  avatarInitials: {
     zIndex: 10,
   },
   callerName: {
@@ -283,7 +352,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    marginTop: 2, // optical alignment
+    marginTop: 2,
   },
   dot: {
     width: 4,
@@ -302,20 +371,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 19,
     alignItems: 'center',
   },
-  chip: {
-    backgroundColor: 'rgba(223, 255, 212, 0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 210,
-    marginBottom: 14,
-  },
-  chipText: {
-    fontFamily: FONTS.styles.subTitleSemibold14.fontFamily,
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#486333',
-    lineHeight: 18,
-  },
   messageText: {
     fontFamily: FONTS.styles.subTitleSemibold14.fontFamily,
     fontSize: 15,
@@ -326,7 +381,7 @@ const styles = StyleSheet.create({
   },
   actionsPillContainer: {
     position: 'absolute',
-    bottom: 80, // Approximate positioning from Figma
+    bottom: 80,
     width: '100%',
     alignItems: 'center',
   },
@@ -353,7 +408,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    overflow: 'hidden', // to clip gradient
+    overflow: 'hidden',
   },
   declineIconWrapper: {
     flex: 1,
@@ -415,4 +470,3 @@ const styles = StyleSheet.create({
     color: '#515B60',
   },
 });
-
