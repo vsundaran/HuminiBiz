@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
@@ -31,9 +31,23 @@ type HomeRouteParams = {
  * Fetches 3 cards per section from the real API.
  */
 const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { data: live,     isLoading: loadingLive }     = useLiveMoments({ limit: 3 });
-  const { data: upcoming, isLoading: loadingUpcoming } = useUpcomingMoments({ limit: 3 });
-  const { data: later,    isLoading: loadingLater }    = useLaterMoments({ limit: 3 });
+  const [refreshing, setRefreshing] = useState(false);
+  const { data: live, isLoading: loadingLive, refetch: refetchLive } = useLiveMoments({ limit: 3 });
+  const { data: upcoming, isLoading: loadingUpcoming, refetch: refetchUpcoming } = useUpcomingMoments({ limit: 3 });
+  const { data: later, isLoading: loadingLater, refetch: refetchLater } = useLaterMoments({ limit: 3 });
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refetchLive(),
+        refetchUpcoming(),
+        refetchLater()
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchLive, refetchUpcoming, refetchLater]);
 
   const renderSectionCards = (
     data: PaginatedMoments | undefined,
@@ -66,6 +80,14 @@ const HomeTabContent: React.FC<{ navigation: any }> = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
       >
         {/* Subscribe Card */}
         <SubscribeCard />
