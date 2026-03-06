@@ -5,24 +5,29 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Switch,
 } from 'react-native';
+import { AnimatedSwitch } from '../common/AnimatedSwitch';
+import { CHIP_VISUAL, DEFAULT_CHIP } from '../../theme/categoryColors';
 import Svg, { Path, Defs, RadialGradient, LinearGradient, Stop, Circle, Rect } from 'react-native-svg';
 
 import { COLORS, FONTS } from '../../theme';
 import { PlusIcon } from '../icons/PlusIcon';
 import { AnimatedView, AnimatedPressable, AnimatedCard, AnimatedListItem } from '../../components/animated';
 import { Shadow } from 'react-native-shadow-2';
-import { useMyMoments, useToggleMomentStatus } from '../../hooks/useMoments';
-import { mapMyMoment } from '../../mappers/moment.mapper';
+import { useMyMoments, useToggleMomentStatus, useArchiveMoment } from '../../hooks/useMoments';
+
+import { mapMyMoment, formatDate, formatTimeRange } from '../../mappers/moment.mapper';
+
 import { SkeletonLoader } from '../common/SkeletonLoader';
 import { EmptyState } from '../common/EmptyState';
+import { AppConfirm } from '../common/AppConfirm';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type InnerTab = 'Custom' | 'Subscribe' | 'Archive';
 
-type CategoryType = 'Wishes' | 'Motivation';
+type CategoryType = string;
 
 type MomentCardData = {
   id: string;
@@ -65,20 +70,25 @@ const CalendarIcon = () => (
 
 import { WishesIcon } from '../icons/WishesIcon';
 import { MotivationIcon } from '../icons/MotivationIcon';
+import { ArchiveBoxIcon } from '../icons/ArchiveBoxIcon';
+
 
 // ─── Category Icon ────────────────────────────────────────────────────────────
 
 const CategoryIcon = ({ type }: { type: CategoryType }) => {
-  if (type === 'Wishes') {
-    return (
-      <View style={[styles.categoryIconBox, { backgroundColor: '#E3FFCF' }]}>
-        <WishesIcon size={40} color="#486333" />
-      </View>
-    );
-  }
+  const visual = CHIP_VISUAL[type] ?? DEFAULT_CHIP;
+
+  // Only Wishes → gift-box icon.
+  // Celebration, Motivation, Others → fire icon (MotivationIcon).
+  const isWishes = type === 'Wishes';
+
   return (
-    <View style={[styles.categoryIconBox, { backgroundColor: '#FFE7E7' }]}>
-      <MotivationIcon size={40} color="#795151" />
+    <View style={[styles.categoryIconBox, { backgroundColor: visual.bg }]}>
+      {isWishes ? (
+        <WishesIcon size={40} color={visual.textColor} />
+      ) : (
+        <MotivationIcon size={40} color={visual.textColor} />
+      )}
     </View>
   );
 };
@@ -105,16 +115,12 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
           <Text style={[styles.cardSubLabel, { color: data.subColor }]}>
             {data.subLabel}
           </Text>
-          <Text style={styles.cardStatus}>Status: {data.status}</Text>
+          <Text style={styles.cardStatus}>Status: {data.status === "Active" ? "Active" : "Inactive"}</Text>
         </View>
       </View>
-      <Switch
+      <AnimatedSwitch
         value={enabled}
         onValueChange={() => onToggle(data.id)}
-        trackColor={{ false: '#EDEDED', true: '#7db80fff' }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor="#EDEDED"
-        style={styles.toggle}
       />
     </View>
 
@@ -125,12 +131,14 @@ const MomentCard = React.memo(({ data, enabled, onToggle, onArchive }: MomentCar
         <View style={styles.divider} />
         <View style={styles.cardFooter}>
           <View style={styles.timeRow}>
-            {data.timeStr && (
+            {/* Live moment: show clock + "Ends in Xm" */}
+            {data.timeStr && !data.dateStr && (
               <>
                 <ClockIcon />
                 <Text style={styles.timeText}>{data.timeStr}</Text>
               </>
             )}
+            {/* Scheduled/inactive: show calendar + date + time range */}
             {data.dateStr && (
               <>
                 <CalendarIcon />
@@ -302,22 +310,39 @@ const ARCHIVED_MOMENTS: MomentCardData[] = [
  */
 export const YourMomentsContent: React.FC = () => {
   const [activeInnerTab, setActiveInnerTab] = useState<InnerTab>('Custom');
+  // ID of the moment pending archive confirmation (null = modal hidden)
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
 
   // ── Real API data ─────────────────────────────────────────────────────
   const { data: myMomentsData, isLoading, refetch } = useMyMoments();
   const { mutate: toggleStatus } = useToggleMomentStatus();
+  const { mutate: archiveMutate } = useArchiveMoment();
+
 
   const activeMoments = (myMomentsData?.activeMoments ?? []).map(mapMyMoment);
   const expiredMoments = (myMomentsData?.expiredMoments ?? []).map(mapMyMoment);
 
+  // Toggle switch: only changes active ON/OFF — card stays in Custom tab.
   const handleToggle = useCallback((id: string, currentActive: boolean) => {
     toggleStatus({ momentId: id, active: !currentActive });
   }, [toggleStatus]);
 
+  // Archive button: show confirmation modal first — archive only on confirm.
   const handleArchive = useCallback((id: string) => {
-    // Archive = set active = false
-    toggleStatus({ momentId: id, active: false });
-  }, [toggleStatus]);
+    setConfirmArchiveId(id);
+  }, []);
+
+  const handleArchiveConfirm = useCallback(() => {
+    if (confirmArchiveId) {
+      archiveMutate(confirmArchiveId);
+    }
+    setConfirmArchiveId(null);
+  }, [confirmArchiveId, archiveMutate]);
+
+  const handleArchiveCancel = useCallback(() => {
+    setConfirmArchiveId(null);
+  }, []);
+
 
   // Active tab pill color: dark for Subscribe, blue for Custom/Archive (Figma spec)
   const getActiveTabStyle = (tab: InnerTab) => {
@@ -389,21 +414,21 @@ export const YourMomentsContent: React.FC = () => {
               <EmptyState message="No active moments" subMessage="Create a moment to get started" />
             ) : (
               activeMoments.map((moment, index) => {
-                // Build MomentCardData from mapped moment
-                const isWishes = moment.categoryName.toLowerCase().includes('wish');
+                const visual = CHIP_VISUAL[moment.categoryName] ?? DEFAULT_CHIP;
                 const cardData: MomentCardData = {
                   id: moment.id,
-                  category: isWishes ? 'Wishes' : 'Motivation',
+                  category: moment.categoryName,
                   categoryLabel: moment.categoryName,
                   subLabel: moment.subcategoryName,
                   status: moment.active ? 'Active' : 'Scheduled',
                   message: moment.description,
                   timeStr: moment.timeStr,
                   dateStr: moment.dateStr,
-                  timeRange: undefined,
-                  headerBg: isWishes ? '#F3FDEC' : '#FFF3EF',
-                  titleColor: isWishes ? '#486333' : '#804343',
-                  subColor: isWishes ? 'rgba(72,99,51,0.9)' : 'rgba(128,67,67,0.9)',
+                  timeRange: moment.timeRange,
+
+                  headerBg: visual.bg,
+                  titleColor: visual.textColor,
+                  subColor: visual.textColor + 'CC', // 80% opacity variant
                 };
                 return (
                   <AnimatedListItem key={moment.id} index={index}>
@@ -423,20 +448,23 @@ export const YourMomentsContent: React.FC = () => {
               <EmptyState message="No archived moments" />
             ) : (
               expiredMoments.map((moment, index) => {
-                const isWishes = moment.categoryName.toLowerCase().includes('wish');
+                const visual = CHIP_VISUAL[moment.categoryName] ?? DEFAULT_CHIP;
+                // Archive tab: always show full date + time range, never "Ends in Xm".
+                const archiveDateStr = formatDate(moment.startDateTime);
+                const archiveTimeRange = formatTimeRange(moment.startDateTime, moment.endDateTime);
                 const cardData: MomentCardData = {
                   id: moment.id,
-                  category: isWishes ? 'Wishes' : 'Motivation',
+                  category: moment.categoryName,
                   categoryLabel: moment.categoryName,
                   subLabel: moment.subcategoryName,
                   status: 'Scheduled',
                   message: moment.description,
-                  timeStr: moment.timeStr,
-                  dateStr: moment.dateStr,
-                  timeRange: undefined,
-                  headerBg: isWishes ? '#F3FDEC' : '#FFF3EF',
-                  titleColor: isWishes ? '#486333' : '#804343',
-                  subColor: isWishes ? 'rgba(72,99,51,0.9)' : 'rgba(128,67,67,0.9)',
+                  timeStr: undefined,          // never show "Ends in Xm" in Archive tab
+                  dateStr: archiveDateStr,
+                  timeRange: archiveTimeRange,
+                  headerBg: visual.bg,
+                  titleColor: visual.textColor,
+                  subColor: visual.textColor + 'CC',
                 };
                 return (
                   <AnimatedListItem key={moment.id} index={index}>
@@ -449,9 +477,22 @@ export const YourMomentsContent: React.FC = () => {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       )}
+
+      {/* ── Archive Confirmation ── */}
+      <AppConfirm
+        visible={confirmArchiveId !== null}
+        onCancel={handleArchiveCancel}
+        onConfirm={handleArchiveConfirm}
+        title="Archive Moment"
+        message="This moment will be moved to your Archive. It won't appear in your active moments."
+        confirmLabel="Archive"
+        cancelLabel="Cancel"
+        confirmStyle="destructive"
+      />
     </>
   );
 };
+
 
 
 
@@ -477,25 +518,24 @@ const ArchiveMomentCard = React.memo(({ data }: { data: MomentCardData }) => (
       <View style={styles.cardBody}>
         <Text style={styles.cardMessage}>{data.message}</Text>
         <View style={styles.divider} />
-        {/* Footer row — date/time only, no archive button */}
-        <View style={styles.cardFooter}>
-          <View style={styles.timeRow}>
-            {data.timeStr && (
-              <>
-                <ClockIcon />
-                <Text style={styles.timeText}>{data.timeStr}</Text>
-              </>
-            )}
-            {data.dateStr && (
-              <>
-                <CalendarIcon />
-                <Text style={styles.timeText}>{data.dateStr}</Text>
-                {data.timeRange && (
-                  <Text style={styles.timeText}>{data.timeRange}</Text>
-                )}
-              </>
-            )}
-          </View>
+        {/* Footer — date + time range only (Figma: calendar icon + M/D/YY + 11:00AM-12:00PM) */}
+        <View style={styles.timeRow}>
+          {data.dateStr && (
+            <>
+              <CalendarIcon />
+              <Text style={styles.timeText}>{data.dateStr}</Text>
+            </>
+          )}
+          {data.timeRange && (
+            <Text style={styles.timeText}>{data.timeRange}</Text>
+          )}
+          {/* Fallback: if only clock-time available (was live, now expired) */}
+          {!data.dateStr && data.timeStr && (
+            <>
+              <ClockIcon />
+              <Text style={styles.timeText}>{data.timeStr}</Text>
+            </>
+          )}
         </View>
       </View>
     </View>
@@ -775,7 +815,7 @@ const styles = StyleSheet.create({
     color: COLORS.textBodyText1,
   },
   toggle: {
-    transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }],
+    // kept for layout reference — AnimatedSwitch handles its own sizing
   },
   cardDividerContainer: {
     paddingHorizontal: 16,
@@ -816,13 +856,16 @@ const styles = StyleSheet.create({
     color: COLORS.textBodyText1,
   },
   archiveButton: {
-    backgroundColor: '#E9EBEB',
+    // Figma: 1px border #6e767a, borderRadius 6, px 14, py 5, no fill bg
+    borderWidth: 1,
+    borderColor: '#6e767a',
     paddingHorizontal: 14,
     paddingVertical: 5,
     borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: 'transparent',
   },
   archiveText: {
     fontFamily: FONTS.family,
@@ -830,7 +873,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     letterSpacing: 0.1,
-    color: COLORS.textSubHeadline,
+    color: '#515b60',
   },
 
   /* FAB */

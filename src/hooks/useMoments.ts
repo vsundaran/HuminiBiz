@@ -6,6 +6,7 @@ import {
   getMyMoments,
   createMoment,
   toggleMomentStatus,
+  archiveMoment,
   toggleLike,
 } from '../services/moment.service';
 import { CreateMomentPayload } from '../types/moment.types';
@@ -99,6 +100,20 @@ export const useToggleLike = () => {
     mutationFn: (momentId: string) => toggleLike(momentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: momentKeys.all });
+    },
+  });
+};
+
+// ─── Archive Moment Mutation ──────────────────────────────────────────────────
+export const useArchiveMoment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (momentId: string) => archiveMoment(momentId),
+    onSuccess: () => {
+      // Move the card to Archive tab by re-fetching my moments
+      queryClient.invalidateQueries({ queryKey: momentKeys.my() });
+      queryClient.invalidateQueries({ queryKey: momentKeys.live() });
     },
   });
 };

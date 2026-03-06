@@ -62,6 +62,12 @@ export const toggleMomentStatus = async (momentId: string, active: boolean): Pro
   return data.data;
 };
 
+// ─── Archive a moment (move to Archive tab) ──────────────────────────────────
+export const archiveMoment = async (momentId: string): Promise<Moment> => {
+  const { data } = await apiClient.put<ApiResponse<Moment>>(`/moments/${momentId}/archive`);
+  return data.data;
+};
+
 // ─── Toggle like on a moment ─────────────────────────────────────────────────
 export const toggleLike = async (momentId: string): Promise<ToggleLikeResponse> => {
   const { data } = await apiClient.post<ApiResponse<ToggleLikeResponse>>(`/moments/${momentId}/like`);

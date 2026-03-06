@@ -30,6 +30,8 @@ export interface Moment {
   startDateTime: string;       // ISO string
   endDateTime: string;         // ISO string
   active: boolean;
+  isArchived?: boolean;
+
   likeCount: number;
   isLikedByMe: boolean;
   isInCall?: boolean;          // true if the moment creator is currently in an active call

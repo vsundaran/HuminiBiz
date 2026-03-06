@@ -25,11 +25,7 @@ function computeEndsIn(endDateTime: string): string {
   return mins > 0 ? `Ends in ${hours}h ${mins}m` : `Ends in ${hours}h`;
 }
 
-/**
- * Compute a human-readable start time string for upcoming/later moments.
- * Returns "HH:MMAM - HH:MMPM"
- */
-function formatTimeRange(startDateTime: string, endDateTime: string): string {
+export function formatTimeRange(startDateTime: string, endDateTime: string): string {
   const formatTime = (dt: string) => {
     const d = new Date(dt);
     let h = d.getHours();
@@ -41,10 +37,7 @@ function formatTimeRange(startDateTime: string, endDateTime: string): string {
   return `${formatTime(startDateTime)} - ${formatTime(endDateTime)}`;
 }
 
-/**
- * Format date as M/D/YY
- */
-function formatDate(dateString: string): string {
+export function formatDate(dateString: string): string {
   const d = new Date(dateString);
   return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`;
 }
@@ -147,20 +140,27 @@ export interface MyMomentUIData {
   endDateTime: string;
   active: boolean;
   isLive: boolean;
-  timeStr?: string;
-  dateStr?: string;
+  timeStr?: string;   // "Ends in Xm" for active live moments
+  dateStr?: string;   // "M/D/YY" for scheduled/archived moments
+  timeRange?: string; // "11:00AM-12:00PM" for scheduled/archived moments
 }
 
 export function mapMyMoment(moment: Moment): MyMomentUIData {
   const now = new Date();
   const isLive = new Date(moment.endDateTime) > now && moment.active;
 
+  // Prefer the pre-computed subcategoryName sent by /moments/my endpoint.
+  const subcategoryName =
+    moment.subcategoryName ||
+    (moment.categoryId as any)?.subcategories?.find?.(
+      (s: any) => s._id?.toString() === moment.subcategoryId,
+    )?.name ||
+    '';
+
   return {
     id: moment._id,
     categoryName: (moment.categoryId as any)?.name ?? 'Unknown',
-    subcategoryName: (moment.categoryId as any)?.subcategories?.find?.(
-      (s: any) => s._id?.toString() === moment.subcategoryId,
-    )?.name ?? '',
+    subcategoryName,
     description: moment.description,
     startDateTime: moment.startDateTime,
     endDateTime: moment.endDateTime,
@@ -168,5 +168,7 @@ export function mapMyMoment(moment: Moment): MyMomentUIData {
     isLive,
     timeStr: isLive ? computeEndsIn(moment.endDateTime) : undefined,
     dateStr: !isLive ? formatDate(moment.startDateTime) : undefined,
+    timeRange: !isLive ? formatTimeRange(moment.startDateTime, moment.endDateTime) : undefined,
   };
 }
+
