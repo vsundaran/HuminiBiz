@@ -156,19 +156,19 @@ export const ReportSubmittedScreen = () => {
 
         {/* ── Go To Home button ── */}
         <AnimatedView animation="slideUp" delay={300} style={{width: '100%'}}>
-          <Shadow
+          {/* <Shadow
             distance={6}
             startColor="rgba(72,86,92,0.29)"
             offset={[0, 4]}
             style={{ width: '100%', borderRadius: 10 }}
             containerStyle={{ width: '100%' }}
-          >
+          > */}
             <AnimatedPressable
               style={styles.goHomeButton}
               onPress={handleGoHome}>
               <Text style={styles.goHomeText}>Go To Home</Text>
             </AnimatedPressable>
-          </Shadow>
+          {/* </Shadow> */}
         </AnimatedView>
       </SafeAreaView>
     </AnimatedScreen>

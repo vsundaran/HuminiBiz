@@ -154,12 +154,14 @@ function App(): React.JSX.Element {
      */
     const offEnded = socketService.on(SOCKET_EVENTS.CALL_ENDED, (_data: any) => {
       const state = useCallStore.getState();
+      const callId = state.activeCall?.callId ?? state.incomingCall?.callId ?? '';
+      const reportedUserId = state.activeCall?.receiverId ?? state.incomingCall?.callerId ?? '';
       const name = state.activeCall?.receiverName ?? state.incomingCall?.callerName ?? 'Unknown';
       const role = state.activeCall?.receiverRole ?? state.incomingCall?.callerRole ?? '';
       
       clearAll();
       if (navigationRef.isReady()) {
-        navigationRef.navigate('CallCompleted', { name, role });
+        navigationRef.navigate('CallCompleted', { callId, reportedUserId, name, role });
       }
     });
 
@@ -169,12 +171,14 @@ function App(): React.JSX.Element {
      */
     const offMissed = socketService.on(SOCKET_EVENTS.CALL_MISSED, (_data: any) => {
       const state = useCallStore.getState();
+      const callId = state.activeCall?.callId ?? state.incomingCall?.callId ?? '';
+      const reportedUserId = state.activeCall?.receiverId ?? state.incomingCall?.callerId ?? '';
       const name = state.activeCall?.receiverName ?? state.incomingCall?.callerName ?? 'Unknown';
       const role = state.activeCall?.receiverRole ?? state.incomingCall?.callerRole ?? '';
       
       clearAll();
       if (navigationRef.isReady()) {
-        navigationRef.navigate('CallCompleted', { name, role });
+        navigationRef.navigate('CallCompleted', { callId, reportedUserId, name, role });
       }
     });
 

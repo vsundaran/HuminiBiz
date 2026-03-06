@@ -2,15 +2,15 @@
 
 export interface ReportReason {
   _id: string;
-  label: string;
+  name: string;
   description?: string;
 }
 
 export interface SubmitReportPayload {
   callId: string;
   reportedUserId: string;
-  reasons: string[];             // Array of reason IDs or labels
-  additionalNote?: string;       // "Others" free text
+  reasonId: string;             // Single reason ID
+  description?: string;       // "Others" free text
 }
 
 export interface Call {

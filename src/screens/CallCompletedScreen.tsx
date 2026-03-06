@@ -20,9 +20,9 @@ import { Shadow } from 'react-native-shadow-2';
 
 type RootStackParamList = {
   Home: undefined;
-  CallCompleted: { name: string; role: string };
+  CallCompleted: { callId: string; reportedUserId: string; name: string; role: string };
   VideoCall: undefined;
-  SelectReason: undefined;
+  SelectReason: { callId: string; reportedUserId: string };
 };
 
 type CallCompletedRouteProp = RouteProp<RootStackParamList, 'CallCompleted'>;
@@ -32,14 +32,14 @@ export const CallCompletedScreen = () => {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<CallCompletedRouteProp>();
   
-  const { name = 'Unknown User', role = '' } = route.params || {};
+  const { callId = '', reportedUserId = '', name = 'Unknown User', role = '' } = route.params || {};
 
   const handleConnectMore = () => {
     navigation.navigate('Home');
   };
 
   const handleGoHome = () => {
-    navigation.navigate('SelectReason');
+    navigation.navigate('SelectReason', { callId, reportedUserId });
   };
 
   return (

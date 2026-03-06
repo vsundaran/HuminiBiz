@@ -19,7 +19,7 @@ import Svg, {
   Rect,
   Path,
 } from 'react-native-svg';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { COLORS, FONTS } from '../theme';
@@ -31,9 +31,11 @@ import { useReportReasons, useSubmitReport } from '../hooks/useCallReport';
 type RootStackParamList = {
   Home: undefined;
   CallCompleted: undefined;
-  SelectReason: undefined;
+  SelectReason: { callId: string; reportedUserId: string };
   ReportSubmitted: undefined;
 };
+
+type SelectReasonRouteProp = RouteProp<RootStackParamList, 'SelectReason'>;
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 
@@ -79,7 +81,7 @@ const CheckIcon = () => (
   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
     <Path
       d="M20 6L9 17l-5-5"
-      stroke="#263238"
+      stroke="#2E566B"
       strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -126,7 +128,7 @@ const ReasonRow = React.memo(
         <Text
           style={[
             styles.reasonLabel,
-            isSelectedOthers && styles.reasonLabelOthersSelected,
+            selected && styles.reasonLabelSelected,
           ]}>
           {label}
         </Text>
@@ -147,13 +149,15 @@ const ReasonRow = React.memo(
 export const SelectReasonScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<SelectReasonRouteProp>();
+  const { callId = '', reportedUserId = '' } = route.params || {};
 
   // ── API hooks ────────────────────────────────────────────────────────────
   const { data: reasons = [], isLoading: reasonsLoading } = useReportReasons();
   const { mutate: submitReport, isPending: isSubmitting } = useSubmitReport();
 
-  // Emojis mapped by label keywords (server doesn't return emojis)
-  const getEmoji = (label: string): string => {
+  const getEmoji = (label?: string): string => {
+    if (!label) return '💬';
     const l = label.toLowerCase();
     if (l.includes('inappropri')) { return '⚠️'; }
     if (l.includes('personal')) { return '🔒'; }
@@ -168,15 +172,7 @@ export const SelectReasonScreen = () => {
 
   const toggleReason = useCallback(
     (id: string) => {
-      setSelectedReasonIds(prev => {
-        const next = new Set(prev);
-        if (next.has(id)) {
-          next.delete(id);
-        } else {
-          next.add(id);
-        }
-        return next;
-      });
+      setSelectedReasonIds(new Set([id]));
     },
     [],
   );
@@ -198,10 +194,10 @@ export const SelectReasonScreen = () => {
     // Submit with selected reason IDs
     submitReport(
       {
-        callId: '',           // Will be populated once call state is tracked
-        reportedUserId: '',   // Same
-        reasons: Array.from(selectedReasonIds),
-        additionalNote: othersText.trim() || undefined,
+        callId,
+        reportedUserId,
+        reasonId: Array.from(selectedReasonIds)[0],
+        description: othersText.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -267,8 +263,8 @@ export const SelectReasonScreen = () => {
               {reasons.map(reason => (
                 <React.Fragment key={reason._id}>
                   <ReasonRow
-                    emoji={getEmoji(reason.label)}
-                    label={reason.label}
+                    emoji={getEmoji(reason.name)}
+                    label={reason.name}
                     selected={selectedReasonIds.has(reason._id)}
                     onPress={() => toggleReason(reason._id)}
                   />
@@ -414,8 +410,8 @@ const styles = StyleSheet.create({
   },
   /* Any selected row */
   reasonRowSelected: {
-    borderColor: COLORS.textMainHeadline,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: '#E6F6FF',
+    borderColor: '#E1EFF7',
   },
   /* "Others" row when selected — blue tint from Figma */
   reasonRowOthersSelected: {
@@ -444,6 +440,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: COLORS.textSubHeadline,
     marginLeft: 8,
+  },
+  reasonLabelSelected: {
+    color: COLORS.textMainHeadline,
   },
   reasonLabelOthersSelected: {
     color: COLORS.textMainHeadline,

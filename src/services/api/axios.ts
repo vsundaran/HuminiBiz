@@ -59,9 +59,11 @@ apiClient.interceptors.request.use(
 
     if (__DEV__) {
       console.log('🚀 API REQUEST', {
+        headers: config.headers,
         url: `${config.baseURL}${config.url}`,
         method: config.method?.toUpperCase(),
         timestamp: new Date().toISOString(),
+        body: config.data,
       });
     }
 
@@ -95,6 +97,7 @@ apiClient.interceptors.response.use(
         url: error.config?.url,
         status: error.response?.status,
         message: error.message,
+        error: error,
       });
     }
 

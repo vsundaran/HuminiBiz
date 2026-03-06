@@ -31,7 +31,7 @@ type RootStackParamList = {
   Home: undefined;
   Ringing: undefined;
   VideoCall: undefined;
-  CallCompleted: { name: string; role: string };
+  CallCompleted: { callId: string; reportedUserId: string; name: string; role: string };
 };
 
 const { width, height } = Dimensions.get('window');
@@ -44,8 +44,8 @@ export const VideoCallScreen = () => {
   const incomingCall = useCallStore((s) => s.incomingCall);
   const clearAll = useCallStore((s) => s.clearAll);
 
-  // Determine which side we are: caller (activeCall) or callee (incomingCall)
   const callId = activeCall?.callId ?? incomingCall?.callId ?? '';
+  const reportedUserId = activeCall?.receiverId ?? incomingCall?.callerId ?? '';
   const displayName = activeCall?.receiverName ?? incomingCall?.callerName ?? 'Unknown';
   const displayRole = activeCall?.receiverRole ?? incomingCall?.callerRole ?? '';
   
@@ -182,8 +182,13 @@ export const VideoCallScreen = () => {
       }
     }
     clearAll();
-    navigation.replace('CallCompleted', { name: displayName, role: displayRole });
-  }, [callId, clearAll, navigation, displayName, displayRole]);
+    navigation.replace('CallCompleted', {
+      callId,
+      reportedUserId,
+      name: displayName,
+      role: displayRole,
+    });
+  }, [callId, reportedUserId, clearAll, navigation, displayName, displayRole]);
 
   return (
     <View style={styles.container}>
